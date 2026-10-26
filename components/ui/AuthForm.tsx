@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { submitAuth } from "@/lib/auth-client";
@@ -10,9 +11,10 @@ type Mode = "login" | "register";
 type Status = { kind: "idle" } | { kind: "submitting" } | { kind: "error"; message: string } | { kind: "success" };
 
 const empty: AuthFields = { name: "", email: "", password: "", confirm: "" };
-
 export function AuthForm({ mode }: { mode: Mode }) {
+  const router = useRouter();
   const [values, setValues] = useState<AuthFields>(empty);
+
   const [errors, setErrors] = useState<AuthErrors>({});
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const isRegister = mode === "register";
@@ -27,7 +29,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
     if (Object.keys(found).length > 0) return;
     setStatus({ kind: "submitting" });
     const result = await submitAuth(mode, { email: values.email.trim(), password: values.password, name: values.name.trim() || undefined });
-    setStatus(result.ok ? { kind: "success" } : { kind: "error", message: result.message });
+  if (result.ok) {
+  setStatus({ kind: "success" });
+
+  if (mode === "login") {
+    router.push("/dashboard");
+  }
+} else {
+  setStatus({ kind: "error", message: result.message });
+}
   }
 
   const field = (key: keyof AuthFields, label: string, type: string, autoComplete: string) => (
