@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type Analysis = {
   riskLevel: "Low" | "Medium" | "High";
@@ -55,9 +56,9 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#071126] px-5 py-10 text-white sm:px-10">
       <div className="mx-auto max-w-5xl">
-        <a href="/" className="text-sm text-cyan-300 hover:text-white">
+        <Link href="/" className="text-sm text-cyan-300 hover:text-white">
           ← ReturnShield AI
-        </a>
+        </Link>
 
         <header className="mt-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">
