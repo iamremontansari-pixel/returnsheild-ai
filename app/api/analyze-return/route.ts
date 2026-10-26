@@ -75,15 +75,15 @@ export async function POST(request: Request) {
           model: "gpt-4.1-mini",
           instructions:
   'Assess possible product return risk cautiously. You do not have historical order outcomes or a validated predictive model. Do not claim a statistically validated probability. COD alone does not prove customer risk. Return only JSON with keys riskLevel ("Low", "Medium", or "High"), reasons (2 or 3 strings), recommendations (2 or 3 strings), and disclaimer (string). Your response must be valid JSON.', 
-          input: `Review this order using only the supplied details. Do not assume missing facts.
+         input: `Return valid JSON only. Review this order using only the supplied details. Do not assume missing facts.
 Product/category: ${product}
 Order value: INR ${amount}
 Payment: ${payment}
 Delivery: ${delivery}`,
           max_output_tokens: 500,
           text: {
-            format: { type: "json_object" },
-          },
+  format: { type: "json_object" },
+},
         }),
       },
     );
