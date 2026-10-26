@@ -71,9 +71,22 @@ export default function DashboardPage() {
     setResult(null);
 
     try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        router.replace("/login");
+        throw new Error("Please log in again to analyze orders.");
+      }
+
       const response = await fetch("/api/analyze-return", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           product,
           payment,
