@@ -55,27 +55,32 @@ export async function POST(request: Request) {
       console.error("GEMINI_API_KEY is missing.");
 
       return NextResponse.json(
-        {
-          error:
-            "AI is not configured. Check GEMINI_API_KEY in Vercel Environment Variables.",
-        },
+        { error: "AI is not configured. Check GEMINI_API_KEY in Vercel." },
         { status: 503 },
       );
     }
 
     const prompt = `
-Assess possible product return risk cautiously.
+You are assisting an ecommerce seller with a preliminary order review.
 
-You do not have historical order outcomes or a validated predictive model.
-Do not claim a statistically validated probability.
-Cash on delivery (COD) alone does not prove customer risk.
-Use only the supplied details. Do not assume missing facts.
+Assess possible return or cancellation concerns using ONLY the details supplied.
+This is a qualitative assessment, not a trained or statistically validated prediction.
+
+Rules:
+- COD alone does not prove a customer is risky.
+- A high order value alone does not prove a customer is risky.
+- Do not invent customer history, return rates, or probabilities.
+- Consider product-specific concerns only when reasonably relevant.
+- Explain uncertainty and avoid presenting assumptions as facts.
+- Give practical, respectful recommendations.
+- Return 2 or 3 concise reasons and 2 or 3 useful recommendations.
+- Do not recommend unfair treatment of customers.
 
 Return JSON with exactly these keys:
 - riskLevel: "Low", "Medium", or "High"
-- reasons: an array of 2 or 3 short strings
-- recommendations: an array of 2 or 3 practical strings
-- disclaimer: a string explaining that this is a preliminary assessment, not a validated prediction
+- reasons: array of 2 or 3 strings
+- recommendations: array of 2 or 3 strings
+- disclaimer: string explaining that this is a preliminary assessment, not a validated prediction
 
 Order details:
 Product/category: ${product}
@@ -85,7 +90,7 @@ Delivery: ${delivery}
 `;
 
     const aiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
       {
         method: "POST",
         headers: {
@@ -136,8 +141,7 @@ Delivery: ${delivery}
 
       try {
         const parsed = JSON.parse(errorBody);
-        details =
-          parsed.error?.message || details;
+        details = parsed.error?.message || details;
       } catch {
         details = errorBody.slice(0, 500) || details;
       }
@@ -186,16 +190,20 @@ Delivery: ${delivery}
     }
 
     if (
+      !analysis ||
       !["Low", "Medium", "High"].includes(analysis.riskLevel) ||
       !Array.isArray(analysis.reasons) ||
-      !analysis.reasons.every((item) => typeof item === "string") ||
+      !analysis.reasons.every(
+        (item) => typeof item === "string" && item.trim().length > 0,
+      ) ||
+      analysis.reasons.length < 2 ||
       !Array.isArray(analysis.recommendations) ||
       !analysis.recommendations.every(
-        (item) => typeof item === "string",
+        (item) => typeof item === "string" && item.trim().length > 0,
       ) ||
+      analysis.recommendations.length < 2 ||
       typeof analysis.disclaimer !== "string" ||
-      analysis.reasons.length < 2 ||
-      analysis.recommendations.length < 2
+      !analysis.disclaimer.trim()
     ) {
       console.error("Gemini output did not match the expected schema.");
 
