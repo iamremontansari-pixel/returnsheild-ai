@@ -2,24 +2,27 @@
 @import "tailwindcss";
 
 @theme {
-  /* Institutional color system */
-  --color-navy: #080f1c;
-  --color-navy-2: #0c1524;
-  --color-navy-3: #111d2e;
-  --color-navy-4: #172438;
+  /* Luxury institutional palette */
+  --color-navy: #080d18;
+  --color-navy-2: #0d1422;
+  --color-navy-3: #121d2d;
+  --color-navy-4: #19263a;
 
-  --color-brand: #25b9aa;
-  --color-brand-dark: #16998e;
-  --color-cyan: #35c9b7;
+  /* Premium champagne gold */
+  --color-brand: #c6a56b;
+  --color-brand-dark: #a8874b;
+  --color-cyan: #53c9b6;
 
-  --color-mist: #e8eef6;
-  --color-line: #29374b;
-  --color-muted: #91a2b8;
-  --color-soft: #bac7d8;
+  /* Text and surfaces */
+  --color-mist: #e9edf4;
+  --color-line: #29364a;
+  --color-muted: #91a0b5;
+  --color-soft: #c3ccda;
 
-  --color-positive: #42c6a5;
-  --color-warning: #e5b45f;
-  --color-negative: #ee7d88;
+  /* Status colors */
+  --color-positive: #56c6a4;
+  --color-warning: #e5b86c;
+  --color-negative: #e87983;
 
   --font-sans: Arial, Helvetica, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -29,32 +32,31 @@
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
-  background: #080f1c;
+  background: #080d18;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  background: #080f1c;
-  color: #dce6f2;
+  background: #080d18;
+  color: #e8edf5;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
-  line-height: 1.55;
-  font-feature-settings: "ss01" on;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Selection */
+/* Premium selection */
 ::selection {
-  color: #06151b;
-  background: #35c9b7;
+  color: #080d18;
+  background: #c6a56b;
 }
 
 /* Accessible focus */
 :focus-visible {
-  outline: 2px solid #35c9b7;
+  outline: 2px solid #c6a56b;
   outline-offset: 3px;
 }
 
@@ -80,13 +82,13 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Consistent financial figures */
+/* Financial figures */
 .font-mono,
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Subtle entrance motion */
+/* Premium entrance animation */
 @keyframes rise {
   from {
     opacity: 0;
@@ -103,28 +105,30 @@ button:disabled {
   animation: rise 450ms ease-out both;
 }
 
-/* Subtle institutional panel treatment */
+/* Institutional panels */
 .terminal-panel {
-  border: 1px solid #29374b;
-  background: #101b2c;
-  border-radius: 6px;
+  border: 1px solid #29364a;
+  background: linear-gradient(145deg, #121d2d, #0d1422);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 12%);
 }
 
 .terminal-divider {
   height: 1px;
   border: 0;
-  background: #29374b;
+  background: #29364a;
 }
 
-/* Compact data presentation */
+/* Data presentation */
 .data-label {
-  color: #91a2b8;
+  color: #91a0b5;
   font-size: 11px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .data-value {
-  color: #e8eef6;
+  color: #f0e5d0;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
@@ -132,7 +136,7 @@ button:disabled {
 /* Scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #34445b #080f1c;
+  scrollbar-color: #3a4659 #080d18;
 }
 
 *::-webkit-scrollbar {
@@ -141,17 +145,17 @@ button:disabled {
 }
 
 *::-webkit-scrollbar-track {
-  background: #080f1c;
+  background: #080d18;
 }
 
 *::-webkit-scrollbar-thumb {
-  border: 2px solid #080f1c;
+  border: 2px solid #080d18;
   border-radius: 8px;
-  background: #34445b;
+  background: #3a4659;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #52657e;
+  background: #c6a56b;
 }
 
 /* Reduced motion */
