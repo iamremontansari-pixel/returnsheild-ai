@@ -39,9 +39,14 @@ export default function DashboardPage() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Analysis failed. Please try again.");
-      }
+ 
+if (!response.ok) {
+  throw new Error(
+    [data.error, data.details].filter(Boolean).join(": ") ||
+      "Analysis failed. Please try again.",
+  );
+}
+    
 
       setResult(data);
     } catch (err) {
