@@ -88,39 +88,34 @@ Delivery: ${delivery}`,
       },
     );
 
+    
     if (!aiResponse.ok) {
-      const errorBody = await aiResponse.text();
+  const errorBody = await aiResponse.text();
 
-      // Log the upstream error, never the API key.
-      console.error("OpenAI API request failed:", {
-        status: aiResponse.status,
-        response: errorBody.slice(0, 1500),
-      });
+  let errorMessage = "Unknown OpenAI API error";
 
-      let message = `OpenAI API request failed (HTTP ${aiResponse.status}).`;
+  try {
+    const parsedError = JSON.parse(errorBody);
+    errorMessage =
+      parsedError.error?.message || errorMessage;
+  } catch {
+    errorMessage = errorBody.slice(0, 500) || errorMessage;
+  }
 
-      if (aiResponse.status === 401) {
-        message =
-          "OpenAI rejected the API key. Check that OPENAI_API_KEY is correct.";
-      } else if (aiResponse.status === 429) {
-        message =
-          "OpenAI quota or rate limit exceeded. Check API billing, credits, and usage limits.";
-      } else if (aiResponse.status === 403) {
-        message =
-          "OpenAI denied access. Check project permissions and model access.";
-      } else if (aiResponse.status === 400) {
-        message =
-          "OpenAI rejected the request. Check the model and request parameters.";
-      }
+  console.error("OpenAI API request failed:", {
+    status: aiResponse.status,
+    message: errorMessage,
+  });
 
-      return NextResponse.json(
-        {
-          error: message,
-          openaiStatus: aiResponse.status,
-        },
-        { status: 502 },
-      );
-    }
+  return NextResponse.json(
+    {
+      error: "OpenAI request failed.",
+      openaiStatus: aiResponse.status,
+      details: errorMessage,
+    },
+    { status: 502 },
+  );
+} 
 
     const aiData = await aiResponse.json();
 
