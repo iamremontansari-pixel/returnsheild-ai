@@ -1,7 +1,10 @@
+
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 type Analysis = {
   riskLevel: "Low" | "Medium" | "High";
@@ -11,6 +14,8 @@ type Analysis = {
 };
 
 export default function DashboardPage() {
+  const router = useRouter();
+
   const [product, setProduct] = useState("");
   const [payment, setPayment] = useState("COD");
   const [amount, setAmount] = useState("1000");
@@ -18,8 +23,48 @@ export default function DashboardPage() {
   const [result, setResult] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  async function analyzeOrder(event: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    let active = true;
+
+    async function checkSession() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (!active) return;
+
+      if (error || !data.user) {
+        router.replace("/login");
+        return;
+      }
+
+      setIsAuthenticated(true);
+      setCheckingAuth(false);
+    }
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+
+      if (!session) {
+        setIsAuthenticated(false);
+        router.replace("/login");
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  async function analyzeOrder(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
     setLoading(true);
     setError("");
@@ -39,14 +84,12 @@ export default function DashboardPage() {
 
       const data = await response.json();
 
- 
-if (!response.ok) {
-  throw new Error(
-    [data.error, data.details].filter(Boolean).join(": ") ||
-      "Analysis failed. Please try again.",
-  );
-}
-    
+      if (!response.ok) {
+        throw new Error(
+          [data.error, data.details].filter(Boolean).join(": ") ||
+            "Analysis failed. Please try again.",
+        );
+      }
 
       setResult(data);
     } catch (err) {
@@ -56,6 +99,14 @@ if (!response.ok) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checkingAuth || !isAuthenticated) {
+    return (
+      <main className="min-h-screen bg-[#071126] p-10 text-white">
+        Checking your login...
+      </main>
+    );
   }
 
   return (
@@ -171,7 +222,9 @@ if (!response.ok) {
 
             {result && (
               <div className="mt-5">
-                <p className="text-sm text-slate-400">Estimated risk level</p>
+                <p className="text-sm text-slate-400">
+                  Estimated risk level
+                </p>
                 <p
                   className={`mt-2 inline-block rounded-full px-4 py-2 font-bold ${
                     result.riskLevel === "High"
@@ -184,14 +237,18 @@ if (!response.ok) {
                   {result.riskLevel} risk
                 </p>
 
-                <h3 className="mt-6 font-semibold">Possible risk factors</h3>
+                <h3 className="mt-6 font-semibold">
+                  Possible risk factors
+                </h3>
                 <ul className="mt-2 list-disc space-y-2 pl-5 text-slate-300">
                   {result.reasons.map((reason, i) => (
                     <li key={i}>{reason}</li>
                   ))}
                 </ul>
 
-                <h3 className="mt-6 font-semibold">Recommended actions</h3>
+                <h3 className="mt-6 font-semibold">
+                  Recommended actions
+                </h3>
                 <ul className="mt-2 list-disc space-y-2 pl-5 text-slate-300">
                   {result.recommendations.map((item, i) => (
                     <li key={i}>{item}</li>
