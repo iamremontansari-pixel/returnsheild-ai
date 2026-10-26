@@ -49,101 +49,125 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      console.error("OPENAI_API_KEY is missing from the server environment.");
+      console.error("GEMINI_API_KEY is missing.");
 
       return NextResponse.json(
         {
           error:
-            "AI is not configured. Check OPENAI_API_KEY in Vercel Environment Variables.",
+            "AI is not configured. Check GEMINI_API_KEY in Vercel Environment Variables.",
         },
         { status: 503 },
       );
     }
 
-    const aiResponse = await fetch(
-      "https://api.openai.com/v1/responses",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          instructions:
-  'Assess possible product return risk cautiously. You do not have historical order outcomes or a validated predictive model. Do not claim a statistically validated probability. COD alone does not prove customer risk. Return only JSON with keys riskLevel ("Low", "Medium", or "High"), reasons (2 or 3 strings), recommendations (2 or 3 strings), and disclaimer (string). Your response must be valid JSON.', 
-         input: `Return valid JSON only. Review this order using only the supplied details. Do not assume missing facts.
+    const prompt = `
+Assess possible product return risk cautiously.
+
+You do not have historical order outcomes or a validated predictive model.
+Do not claim a statistically validated probability.
+Cash on delivery (COD) alone does not prove customer risk.
+Use only the supplied details. Do not assume missing facts.
+
+Return JSON with exactly these keys:
+- riskLevel: "Low", "Medium", or "High"
+- reasons: an array of 2 or 3 short strings
+- recommendations: an array of 2 or 3 practical strings
+- disclaimer: a string explaining that this is a preliminary assessment, not a validated prediction
+
+Order details:
 Product/category: ${product}
 Order value: INR ${amount}
 Payment: ${payment}
-Delivery: ${delivery}`,
-          max_output_tokens: 500,
-          text: {
-  format: { type: "json_object" },
-},
+Delivery: ${delivery}
+`;
+
+    const aiResponse = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                riskLevel: {
+                  type: "STRING",
+                  enum: ["Low", "Medium", "High"],
+                },
+                reasons: {
+                  type: "ARRAY",
+                  items: { type: "STRING" },
+                },
+                recommendations: {
+                  type: "ARRAY",
+                  items: { type: "STRING" },
+                },
+                disclaimer: { type: "STRING" },
+              },
+              required: [
+                "riskLevel",
+                "reasons",
+                "recommendations",
+                "disclaimer",
+              ],
+            },
+          },
         }),
       },
     );
 
-    
     if (!aiResponse.ok) {
-  const errorBody = await aiResponse.text();
+      const errorBody = await aiResponse.text();
+      let details = "Unknown Gemini API error";
 
-  let errorMessage = "Unknown OpenAI API error";
+      try {
+        const parsed = JSON.parse(errorBody);
+        details =
+          parsed.error?.message || details;
+      } catch {
+        details = errorBody.slice(0, 500) || details;
+      }
 
-  try {
-    const parsedError = JSON.parse(errorBody);
-    errorMessage =
-      parsedError.error?.message || errorMessage;
-  } catch {
-    errorMessage = errorBody.slice(0, 500) || errorMessage;
-  }
+      console.error("Gemini API request failed:", {
+        status: aiResponse.status,
+        message: details,
+      });
 
-  console.error("OpenAI API request failed:", {
-    status: aiResponse.status,
-    message: errorMessage,
-  });
-
-  return NextResponse.json(
-    {
-      error: "OpenAI request failed.",
-      openaiStatus: aiResponse.status,
-      details: errorMessage,
-    },
-    { status: 502 },
-  );
-} 
+      return NextResponse.json(
+        {
+          error: "Gemini request failed.",
+          details,
+        },
+        { status: 502 },
+      );
+    }
 
     const aiData = await aiResponse.json();
 
     const outputText =
-      typeof aiData.output_text === "string"
-        ? aiData.output_text
-        : aiData.output
-            ?.flatMap(
-              (item: {
-                content?: Array<{
-                  type?: string;
-                  text?: string;
-                }>;
-              }) => item.content ?? [],
-            )
-            .find(
-              (item: { type?: string; text?: string }) =>
-                item.type === "output_text",
-            )?.text;
+      aiData.candidates?.[0]?.content?.parts
+        ?.map((part: { text?: string }) => part.text ?? "")
+        .join("") ?? "";
 
     if (!outputText) {
-      console.error("OpenAI returned no text output:", {
-        status: aiData.status,
-        responseId: aiData.id,
-      });
+      console.error("Gemini returned no text output.");
 
       return NextResponse.json(
-        { error: "OpenAI returned no usable text. Please try again." },
+        { error: "Gemini returned no usable text. Please try again." },
         { status: 502 },
       );
     }
@@ -153,10 +177,10 @@ Delivery: ${delivery}`,
     try {
       analysis = JSON.parse(outputText) as Analysis;
     } catch {
-      console.error("OpenAI output was not valid JSON.");
+      console.error("Gemini output was not valid JSON.");
 
       return NextResponse.json(
-        { error: "OpenAI returned an unreadable result." },
+        { error: "Gemini returned an unreadable result." },
         { status: 502 },
       );
     }
@@ -164,21 +188,27 @@ Delivery: ${delivery}`,
     if (
       !["Low", "Medium", "High"].includes(analysis.riskLevel) ||
       !Array.isArray(analysis.reasons) ||
+      !analysis.reasons.every((item) => typeof item === "string") ||
       !Array.isArray(analysis.recommendations) ||
-      typeof analysis.disclaimer !== "string"
+      !analysis.recommendations.every(
+        (item) => typeof item === "string",
+      ) ||
+      typeof analysis.disclaimer !== "string" ||
+      analysis.reasons.length < 2 ||
+      analysis.recommendations.length < 2
     ) {
-      console.error("OpenAI output did not match the expected schema.");
+      console.error("Gemini output did not match the expected schema.");
 
       return NextResponse.json(
-        { error: "OpenAI returned an invalid analysis result." },
+        { error: "Gemini returned an invalid analysis result." },
         { status: 502 },
       );
     }
 
     return NextResponse.json({
       riskLevel: analysis.riskLevel,
-      reasons: analysis.reasons.slice(0, 3).map(String),
-      recommendations: analysis.recommendations.slice(0, 3).map(String),
+      reasons: analysis.reasons.slice(0, 3),
+      recommendations: analysis.recommendations.slice(0, 3),
       disclaimer: analysis.disclaimer,
     });
   } catch (error) {
