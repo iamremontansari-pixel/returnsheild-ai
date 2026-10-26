@@ -1,5 +1,6 @@
 
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 type OrderInput = {
   product?: string;
@@ -68,7 +69,6 @@ async function requestGemini(
     },
   };
 
-  // Retry temporary server overloads with increasing delays.
   for (let attempt = 0; attempt < 3; attempt++) {
     let response: Response;
 
@@ -84,7 +84,6 @@ async function requestGemini(
         signal: AbortSignal.timeout(20000),
       });
     } catch (error) {
-      // Retry network failures, but don't retry after the final attempt.
       if (attempt < 2) {
         await wait(1000 * (attempt + 1));
         continue;
@@ -97,7 +96,6 @@ async function requestGemini(
       return response;
     }
 
-    // Only retry temporary overloads. Other errors need diagnosis.
     if (response.status !== 503 || attempt === 2) {
       return response;
     }
@@ -108,17 +106,13 @@ async function requestGemini(
   throw new Error("Gemini request retries were exhausted.");
 }
 
-async function getAnalysis(
-  apiKey: string,
-  prompt: string,
-) {
+async function getAnalysis(apiKey: string, prompt: string) {
   let response = await requestGemini(
     PRIMARY_MODEL,
     apiKey,
     prompt,
   );
 
-  // If the primary model is overloaded, try the fallback model.
   if (response.status === 503) {
     console.warn(
       `${PRIMARY_MODEL} remains overloaded; trying ${FALLBACK_MODEL}.`,
@@ -211,9 +205,7 @@ async function getAnalysis(
     typeof analysis.disclaimer !== "string" ||
     !analysis.disclaimer.trim()
   ) {
-    throw new Error(
-      "Gemini returned an invalid analysis result.",
-    );
+    throw new Error("Gemini returned an invalid analysis result.");
   }
 
   return {
@@ -226,6 +218,49 @@ async function getAnalysis(
 
 export async function POST(request: Request) {
   try {
+    // Require a Supabase access token.
+    const authHeader = request.headers.get("Authorization");
+    const accessToken = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "Please log in to analyze orders." },
+        { status: 401 },
+      );
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Supabase authentication configuration is missing.");
+
+      return NextResponse.json(
+        { error: "Authentication service is not configured." },
+        { status: 500 },
+      );
+    }
+
+    // Verify the token with Supabase; never trust a token without verification.
+    const authClient = createClient(supabaseUrl, supabaseKey);
+    const {
+      data: { user },
+      error: authError,
+    } = await authClient.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          error:
+            "Your session is invalid or expired. Please log in again.",
+        },
+        { status: 401 },
+      );
+    }
+
     let body: OrderInput;
 
     try {
@@ -238,9 +273,7 @@ export async function POST(request: Request) {
     }
 
     const product =
-      typeof body.product === "string"
-        ? body.product.trim()
-        : "";
+      typeof body.product === "string" ? body.product.trim() : "";
     const payment = body.payment;
     const amount = Number(body.amount);
     const delivery = body.delivery;
@@ -266,7 +299,10 @@ export async function POST(request: Request) {
       console.error("GEMINI_API_KEY is missing.");
 
       return NextResponse.json(
-        { error: "AI is not configured. Check GEMINI_API_KEY in Vercel." },
+        {
+          error:
+            "AI is not configured. Check GEMINI_API_KEY in Vercel.",
+        },
         { status: 503 },
       );
     }
