@@ -31,11 +31,12 @@ export async function submitAuth(
       const { data, error } = await supabase.auth.signUp({
         email: payload.email,
         password: payload.password,
-        options: {
-          data: {
-            full_name: payload.name ?? "",
-          },
-        },
+       options: {
+  data: {
+    full_name: payload.name ?? "",
+  },
+  emailRedirectTo: `${window.location.origin}/login`,
+},
       });
 
       if (error) {
