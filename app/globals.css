@@ -1,28 +1,175 @@
+
 @import "tailwindcss";
 
 @theme {
-  --color-navy: #0a1330;
-  --color-navy-2: #101c45;
-  --color-navy-3: #1b2a5e;
-  --color-brand: #2563eb;
-  --color-brand-dark: #1d4ed8;
-  --color-cyan: #22d3ee;
-  --color-mist: #f3f6fc;
-  --color-line: #e1e7f2;
-  --color-muted: #4b5568;
-  --color-soft: #b4bfd8;
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  /* Institutional color system */
+  --color-navy: #080f1c;
+  --color-navy-2: #0c1524;
+  --color-navy-3: #111d2e;
+  --color-navy-4: #172438;
+
+  --color-brand: #25b9aa;
+  --color-brand-dark: #16998e;
+  --color-cyan: #35c9b7;
+
+  --color-mist: #e8eef6;
+  --color-line: #29374b;
+  --color-muted: #91a2b8;
+  --color-soft: #bac7d8;
+
+  --color-positive: #42c6a5;
+  --color-warning: #e5b45f;
+  --color-negative: #ee7d88;
+
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-html { scroll-behavior: smooth; }
-body { font-family: var(--font-sans); color: var(--color-navy); background: #fff; }
+/* Base */
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+  background: #080f1c;
+}
 
-:focus-visible { outline: 3px solid var(--color-cyan); outline-offset: 2px; }
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: #080f1c;
+  color: #dce6f2;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  font-feature-settings: "ss01" on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
-@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.hero-in { animation: rise .6s ease-out both; }
+/* Selection */
+::selection {
+  color: #06151b;
+  background: #35c9b7;
+}
 
+/* Accessible focus */
+:focus-visible {
+  outline: 2px solid #35c9b7;
+  outline-offset: 3px;
+}
+
+/* Form controls */
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Consistent financial figures */
+.font-mono,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle entrance motion */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-in {
+  animation: rise 450ms ease-out both;
+}
+
+/* Subtle institutional panel treatment */
+.terminal-panel {
+  border: 1px solid #29374b;
+  background: #101b2c;
+  border-radius: 6px;
+}
+
+.terminal-divider {
+  height: 1px;
+  border: 0;
+  background: #29374b;
+}
+
+/* Compact data presentation */
+.data-label {
+  color: #91a2b8;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.data-value {
+  color: #e8eef6;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #34445b #080f1c;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #080f1c;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid #080f1c;
+  border-radius: 8px;
+  background: #34445b;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #52657e;
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .hero-in { animation: none; }
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .hero-in {
+    animation: none;
+  }
 }
