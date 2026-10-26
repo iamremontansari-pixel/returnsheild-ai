@@ -136,6 +136,10 @@ export function Navbar() {
     );
   }
 
+   if (pathname.startsWith("/dashboard")) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-navy text-white">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
