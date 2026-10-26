@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 
 type OrderInput = {
@@ -7,9 +8,25 @@ type OrderInput = {
   delivery?: string;
 };
 
+type Analysis = {
+  riskLevel: "Low" | "Medium" | "High";
+  reasons: string[];
+  recommendations: string[];
+  disclaimer: string;
+};
+
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as OrderInput;
+    let body: OrderInput;
+
+    try {
+      body = (await request.json()) as OrderInput;
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON." },
+        { status: 400 },
+      );
+    }
 
     const product =
       typeof body.product === "string" ? body.product.trim() : "";
@@ -35,63 +52,116 @@ export async function POST(request: Request) {
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
+      console.error("OPENAI_API_KEY is missing from the server environment.");
+
       return NextResponse.json(
         {
           error:
-            "AI is not configured yet. Add OPENAI_API_KEY in your Vercel project environment variables.",
+            "AI is not configured. Check OPENAI_API_KEY in Vercel Environment Variables.",
         },
         { status: 503 },
       );
     }
 
-    const aiResponse = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        instructions:
-          "You help online businesses understand possible product return risks. You do not have historical order outcomes or a validated predictive model. Never claim a statistically validated probability. COD may be a consideration, not proof of customer risk. Give a cautious qualitative assessment, explain uncertainty, and suggest practical business improvements. Return only valid JSON with keys riskLevel (Low, Medium, or High), reasons (array of 2 or 3 strings), recommendations (array of 2 or 3 strings), and disclaimer (string).",
-        input: `Review this order using only the information provided. Do not assume facts not given.
+    const aiResponse = await fetch(
+      "https://api.openai.com/v1/responses",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          instructions:
+            'Assess possible product return risk cautiously. You do not have historical order outcomes or a validated predictive model. Do not claim a statistically validated probability. COD alone does not prove customer risk. Return only JSON with keys riskLevel ("Low", "Medium", or "High"), reasons (2 or 3 strings), recommendations (2 or 3 strings), and disclaimer (string).',
+          input: `Review this order using only the supplied details. Do not assume missing facts.
 Product/category: ${product}
 Order value: INR ${amount}
 Payment: ${payment}
 Delivery: ${delivery}`,
-        max_output_tokens: 500,
-      }),
-    });
+          max_output_tokens: 500,
+          text: {
+            format: { type: "json_object" },
+          },
+        }),
+      },
+    );
 
     if (!aiResponse.ok) {
+      const errorBody = await aiResponse.text();
+
+      // Log the upstream error, never the API key.
+      console.error("OpenAI API request failed:", {
+        status: aiResponse.status,
+        response: errorBody.slice(0, 1500),
+      });
+
+      let message = `OpenAI API request failed (HTTP ${aiResponse.status}).`;
+
+      if (aiResponse.status === 401) {
+        message =
+          "OpenAI rejected the API key. Check that OPENAI_API_KEY is correct.";
+      } else if (aiResponse.status === 429) {
+        message =
+          "OpenAI quota or rate limit exceeded. Check API billing, credits, and usage limits.";
+      } else if (aiResponse.status === 403) {
+        message =
+          "OpenAI denied access. Check project permissions and model access.";
+      } else if (aiResponse.status === 400) {
+        message =
+          "OpenAI rejected the request. Check the model and request parameters.";
+      }
+
       return NextResponse.json(
-        { error: "The AI service could not complete the analysis. Please try again." },
+        {
+          error: message,
+          openaiStatus: aiResponse.status,
+        },
         { status: 502 },
       );
     }
 
     const aiData = await aiResponse.json();
 
-    const outputText = aiData.output
-      ?.flatMap((item: { content?: Array<{ type?: string; text?: string }> }) =>
-        item.content ?? [],
-      )
-      .find((item: { type?: string }) => item.type === "output_text")?.text;
+    const outputText =
+      typeof aiData.output_text === "string"
+        ? aiData.output_text
+        : aiData.output
+            ?.flatMap(
+              (item: {
+                content?: Array<{
+                  type?: string;
+                  text?: string;
+                }>;
+              }) => item.content ?? [],
+            )
+            .find(
+              (item: { type?: string; text?: string }) =>
+                item.type === "output_text",
+            )?.text;
 
     if (!outputText) {
+      console.error("OpenAI returned no text output:", {
+        status: aiData.status,
+        responseId: aiData.id,
+      });
+
       return NextResponse.json(
-        { error: "The AI returned an empty result. Please try again." },
+        { error: "OpenAI returned no usable text. Please try again." },
         { status: 502 },
       );
     }
 
-    let analysis;
+    let analysis: Analysis;
 
     try {
-      analysis = JSON.parse(outputText);
+      analysis = JSON.parse(outputText) as Analysis;
     } catch {
+      console.error("OpenAI output was not valid JSON.");
+
       return NextResponse.json(
-        { error: "The AI returned an unreadable result. Please try again." },
+        { error: "OpenAI returned an unreadable result." },
         { status: 502 },
       );
     }
@@ -102,8 +172,10 @@ Delivery: ${delivery}`,
       !Array.isArray(analysis.recommendations) ||
       typeof analysis.disclaimer !== "string"
     ) {
+      console.error("OpenAI output did not match the expected schema.");
+
       return NextResponse.json(
-        { error: "The AI returned an invalid result. Please try again." },
+        { error: "OpenAI returned an invalid analysis result." },
         { status: 502 },
       );
     }
@@ -114,10 +186,12 @@ Delivery: ${delivery}`,
       recommendations: analysis.recommendations.slice(0, 3).map(String),
       disclaimer: analysis.disclaimer,
     });
-  } catch {
+  } catch (error) {
+    console.error("Analyze-return route failed:", error);
+
     return NextResponse.json(
-      { error: "Unable to process the request. Please try again." },
-      { status: 400 },
+      { error: "The server could not process the analysis request." },
+      { status: 500 },
     );
   }
 }
