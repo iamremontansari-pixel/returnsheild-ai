@@ -1,4 +1,3 @@
-```tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -188,13 +187,13 @@ export function DashboardPreview() {
       icon: ShieldAlert,
       accent: "red" as const,
     },
-    {
-      label: "Historical RTO",
-      value: `${stats.rtoRate}%`,
-      note: "Sample outcomes",
-      icon: ScanSearch,
-      accent: "gold" as const,
-    },
+   {
+  label: "Historical RTO",
+  value: `${stats.rtoRate}%`,
+  note: "Sample outcomes",
+  icon: ScanSearch,
+  accent: "gold" as const,
+},
     {
       label: "High-risk exposure",
       value: `₹${stats.exposure.toLocaleString("en-IN")}`,
@@ -518,7 +517,7 @@ export function DashboardPreview() {
                 <p className="p-8 text-center text-sm text-[#a7b8ac]">
                   No sample orders match these filters. Try another combination.
                 </p>
-              }
+              )}
             </div>
           </div>
 
