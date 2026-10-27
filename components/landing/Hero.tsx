@@ -1,6 +1,6 @@
 import { LinkButton } from "@/components/ui/LinkButton";
 import { DashboardPreview } from "@/components/dashboard/DashboardPreview";
-
+import DemoBanner from "@/components/DemoBanner";
 export function Hero() {
   return (
     <section className="bg-linear-to-b from-navy to-navy-2 pb-20 pt-16 text-white">
@@ -14,11 +14,12 @@ export function Hero() {
         <div className="hero-in mt-8 flex flex-wrap gap-3" style={{ animationDelay: "160ms" }}>
           <LinkButton href="/register">Start Free</LinkButton>
           <LinkButton href="#preview" variant="outline">
-            Explore Dashboard
+          See Live Demo  
           </LinkButton>
         </div>
         <div id="preview" className="mt-14 scroll-mt-24">
-          <DashboardPreview />
+          <DemoBanner />
+<DashboardPreview />
         </div>
       </div>
     </section>
