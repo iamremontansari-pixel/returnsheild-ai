@@ -36,36 +36,37 @@ type PaymentFilter = "All" | PaymentMethod;
 type RiskFilter = "All" | RiskLevel;
 
 /* ---------- Terminal palette ---------- */
+const PRIMARY = "#34d399";
 const AMBER = "#ffb000";
-const GREEN = "#00e676";
+const GREEN = "#a3e635";
 const RED = "#ff3b5c";
 const CYAN = "#22d3ee";
-const GRID = "rgba(255,176,0,0.08)";
-const AXIS = "#8a6a2a";
+const GRID = "rgba(52,211,153,0.08)";
+const AXIS = "#5f9a7e";
 
 const riskText: Record<RiskLevel, string> = {
-  Low: "text-[#00e676]",
+  Low: "text-[#a3e635]",
   Medium: "text-[#ffb000]",
   High: "text-[#ff3b5c]",
 };
 
 const riskChip: Record<RiskLevel, string> = {
-  Low: "border-[#00e676]/40 bg-[#00e676]/10 text-[#00e676]",
+  Low: "border-[#a3e635]/40 bg-[#a3e635]/10 text-[#a3e635]",
   Medium: "border-[#ffb000]/40 bg-[#ffb000]/10 text-[#ffb000]",
   High: "border-[#ff3b5c]/40 bg-[#ff3b5c]/10 text-[#ff3b5c]",
 };
 
 const riskBar: Record<RiskLevel, string> = {
-  Low: "bg-[#00e676]",
+  Low: "bg-[#a3e635]",
   Medium: "bg-[#ffb000]",
   High: "bg-[#ff3b5c]",
 };
 
 const tooltipStyle = {
   background: "#050505",
-  border: "1px solid #ffb000",
+  border: "1px solid #34d399",
   borderRadius: 0,
-  color: "#ffb000",
+  color: "#34d399",
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
   fontSize: 11,
 };
@@ -108,23 +109,23 @@ function Panel({
   return (
     <section
       className={cn(
-        "relative border border-[#ffb000]/25 bg-[#050505]",
-        "shadow-[inset_0_0_40px_rgba(255,176,0,0.03)]",
+        "relative border border-[#34d399]/25 bg-[#050505]",
+        "shadow-[inset_0_0_40px_rgba(52,211,153,0.03)]",
         className,
       )}
     >
       {/* corner brackets */}
-      <span className="pointer-events-none absolute -left-px -top-px size-2 border-l-2 border-t-2 border-[#ffb000]" />
-      <span className="pointer-events-none absolute -right-px -top-px size-2 border-r-2 border-t-2 border-[#ffb000]" />
-      <span className="pointer-events-none absolute -bottom-px -left-px size-2 border-b-2 border-l-2 border-[#ffb000]" />
-      <span className="pointer-events-none absolute -bottom-px -right-px size-2 border-b-2 border-r-2 border-[#ffb000]" />
+      <span className="pointer-events-none absolute -left-px -top-px size-2 border-l-2 border-t-2 border-[#34d399]" />
+      <span className="pointer-events-none absolute -right-px -top-px size-2 border-r-2 border-t-2 border-[#34d399]" />
+      <span className="pointer-events-none absolute -bottom-px -left-px size-2 border-b-2 border-l-2 border-[#34d399]" />
+      <span className="pointer-events-none absolute -bottom-px -right-px size-2 border-b-2 border-r-2 border-[#34d399]" />
 
-      <header className="flex items-center justify-between gap-3 border-b border-[#ffb000]/25 bg-[#ffb000]/[0.06] px-3 py-1.5">
+      <header className="flex items-center justify-between gap-3 border-b border-[#34d399]/25 bg-[#34d399]/[0.06] px-3 py-1.5">
         <div className="flex items-center gap-2">
-          <span className="bg-[#ffb000] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
+          <span className="bg-[#34d399] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
             {tag ?? "RS"}
           </span>
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#34d399]">
             {title}
           </h3>
         </div>
@@ -149,10 +150,10 @@ function Toggle<T extends string>({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a6a2a]">
+      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#5f9a7e]">
         {label}
       </span>
-      <div className="flex border border-[#ffb000]/30">
+      <div className="flex border border-[#34d399]/30">
         {options.map((o) => (
           <button
             key={o}
@@ -160,10 +161,10 @@ function Toggle<T extends string>({
             aria-pressed={value === o}
             onClick={() => onChange(o)}
             className={cn(
-              "border-r border-[#ffb000]/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors last:border-r-0",
+              "border-r border-[#34d399]/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors last:border-r-0",
               value === o
-                ? "bg-[#ffb000] text-black"
-                : "text-[#ffb000]/80 hover:bg-[#ffb000]/10 hover:text-[#ffb000]",
+                ? "bg-[#34d399] text-black"
+                : "text-[#34d399]/80 hover:bg-[#34d399]/10 hover:text-[#34d399]",
             )}
           >
             {o}
@@ -211,9 +212,9 @@ function Kpi({
   sparkKey: string;
 }) {
   return (
-    <div className="group relative border border-[#ffb000]/25 bg-[#050505] p-3 transition-colors hover:border-[#ffb000]/70">
+    <div className="group relative border border-[#34d399]/25 bg-[#050505] p-3 transition-colors hover:border-[#34d399]/70">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a6a2a]">
+        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#5f9a7e]">
           {label}
         </span>
         <Icon className="size-4" style={{ color }} />
@@ -225,7 +226,7 @@ function Kpi({
         {value}
       </div>
       <Spark data={spark} dataKey={sparkKey} color={color} />
-      <div className="mt-1 text-[10px] uppercase tracking-widest text-[#8a6a2a]">{note}</div>
+      <div className="mt-1 text-[10px] uppercase tracking-widest text-[#5f9a7e]">{note}</div>
     </div>
   );
 }
@@ -319,7 +320,7 @@ export function DashboardPreview() {
 
   const tickerItems = useMemo(
     () => [
-      { k: "ORDERS", v: String(stats.total), c: AMBER },
+      { k: "ORDERS", v: String(stats.total), c: PRIMARY },
       { k: "FLAGGED", v: String(stats.flagged), c: RED },
       { k: "RTO", v: `${stats.rtoRate}%`, c: AMBER },
       { k: "EXPOSURE", v: `₹${stats.exposure.toLocaleString("en-IN")}`, c: GREEN },
@@ -334,68 +335,68 @@ export function DashboardPreview() {
 
   return (
     <section
-      className="relative overflow-hidden border border-[#ffb000]/30 bg-black font-mono text-[#ffb000]"
+      className="relative overflow-hidden border border-[#34d399]/30 bg-black font-mono text-[#34d399]"
       aria-label="ReturnShield risk terminal"
     >
       <style>{terminalCss}</style>
 
       {/* ambient glow + scanlines */}
-      <div className="pointer-events-none absolute -left-20 -top-20 size-80 rounded-full bg-[#ffb000]/[0.07] blur-[100px]" />
+      <div className="pointer-events-none absolute -left-20 -top-20 size-80 rounded-full bg-[#34d399]/[0.07] blur-[100px]" />
       <div className="pointer-events-none absolute -bottom-24 right-0 size-80 rounded-full bg-[#22d3ee]/[0.05] blur-[110px]" />
       <div className="rs-scan pointer-events-none absolute inset-0 z-20" />
 
       {/* ===== Top command bar ===== */}
-      <div className="relative z-10 flex flex-wrap items-center gap-3 border-b border-[#ffb000]/30 bg-[#0b0800] px-3 py-2">
+      <div className="relative z-10 flex flex-wrap items-center gap-3 border-b border-[#34d399]/30 bg-[#03100a] px-3 py-2">
         <div className="flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center bg-[#ffb000] text-black">
+          <span className="flex size-7 items-center justify-center bg-[#34d399] text-black">
             <ShieldCheck className="size-4" />
           </span>
           <div className="leading-tight">
             <div className="text-sm font-bold tracking-[0.2em]">
               RETURN<span className="text-white">SHIELD</span>
             </div>
-            <div className="text-[9px] uppercase tracking-[0.25em] text-[#8a6a2a]">
+            <div className="text-[9px] uppercase tracking-[0.25em] text-[#5f9a7e]">
               AI Risk Terminal · RTO Desk
             </div>
           </div>
         </div>
 
-        <label className="flex min-w-[200px] flex-1 items-center gap-2 border border-[#ffb000]/40 bg-black px-2 py-1.5 focus-within:border-[#ffb000] focus-within:shadow-[0_0_0_1px_#ffb000]">
-          <Search className="size-3.5 text-[#8a6a2a]" />
-          <span className="text-[11px] font-bold text-[#8a6a2a]">&gt;</span>
+        <label className="flex min-w-[200px] flex-1 items-center gap-2 border border-[#34d399]/40 bg-black px-2 py-1.5 focus-within:border-[#34d399] focus-within:shadow-[0_0_0_1px_#34d399]">
+          <Search className="size-3.5 text-[#5f9a7e]" />
+          <span className="text-[11px] font-bold text-[#5f9a7e]">&gt;</span>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="SEARCH ORDER ID / PRODUCT / REASON"
             aria-label="Search orders"
-            className="w-full bg-transparent text-[11px] uppercase tracking-wider text-[#ffb000] outline-none placeholder:text-[#5c4718]"
+            className="w-full bg-transparent text-[11px] uppercase tracking-wider text-[#34d399] outline-none placeholder:text-[#2f5a45]"
           />
-          <span className="rs-blink h-3.5 w-1.5 bg-[#ffb000]" />
+          <span className="rs-blink h-3.5 w-1.5 bg-[#34d399]" />
         </label>
 
         <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.15em]">
-          <span className="flex items-center gap-1.5 text-[#00e676]">
+          <span className="flex items-center gap-1.5 text-[#a3e635]">
             <Radio className="size-3.5" />
             <span className="relative flex size-1.5">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#00e676] opacity-60" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-[#00e676]" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#a3e635] opacity-60" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-[#a3e635]" />
             </span>
             SIM FEED
           </span>
           <span className="tabular-nums text-white">
-            {now ?? "--:--:--"} <span className="text-[#8a6a2a]">IST</span>
+            {now ?? "--:--:--"} <span className="text-[#5f9a7e]">IST</span>
           </span>
         </div>
       </div>
 
       {/* ===== Ticker tape ===== */}
-      <div className="relative z-10 overflow-hidden border-b border-[#ffb000]/30 bg-black py-1.5">
+      <div className="relative z-10 overflow-hidden border-b border-[#34d399]/30 bg-black py-1.5">
         <div className="rs-marquee flex w-max gap-8 whitespace-nowrap pr-8">
           {[...tickerItems, ...tickerItems].map((t, i) => (
             <span key={i} className="flex items-center gap-2 text-[11px] font-bold tracking-wider">
-              <span className="text-[#8a6a2a]">{t.k}</span>
+              <span className="text-[#5f9a7e]">{t.k}</span>
               <span style={{ color: t.c }}>{t.v}</span>
-              <span className="text-[#3a2c0c]">|</span>
+              <span className="text-[#1f3a2c]">|</span>
             </span>
           ))}
         </div>
@@ -405,11 +406,11 @@ export function DashboardPreview() {
         {/* ===== Filters ===== */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#8a6a2a]">
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#5f9a7e]">
               Function · Risk Overview
             </div>
             <h2 className="text-lg font-bold uppercase tracking-[0.12em] text-white sm:text-xl">
-              Your orders. <span className="text-[#ffb000]">Under control.</span>
+              Your orders. <span className="text-[#34d399]">Under control.</span>
             </h2>
           </div>
           <div className="flex flex-wrap items-center gap-4">
@@ -476,7 +477,7 @@ export function DashboardPreview() {
               <Panel
                 title="Risk Distribution"
                 tag="RD"
-                right={<span className="text-[9px] tracking-widest text-[#8a6a2a]">SAMPLE</span>}
+                right={<span className="text-[9px] tracking-widest text-[#5f9a7e]">SAMPLE</span>}
               >
                 <div
                   className="h-56"
@@ -488,8 +489,8 @@ export function DashboardPreview() {
                       <CartesianGrid stroke={GRID} vertical={false} />
                       <XAxis dataKey="level" stroke={AXIS} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
                       <YAxis stroke={AXIS} allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,176,0,0.06)" }} />
-                      <Legend wrapperStyle={{ fontSize: 10, color: AMBER }} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(52,211,153,0.06)" }} />
+                      <Legend wrapperStyle={{ fontSize: 10, color: PRIMARY }} />
                       <Bar dataKey="COD" fill={RED} maxBarSize={30} />
                       <Bar dataKey="Prepaid" fill={CYAN} maxBarSize={30} />
                     </BarChart>
@@ -500,7 +501,7 @@ export function DashboardPreview() {
               <Panel
                 title="Weekly Order Signals"
                 tag="WS"
-                right={<span className="text-[9px] tracking-widest text-[#8a6a2a]">ILLUSTRATIVE</span>}
+                right={<span className="text-[9px] tracking-widest text-[#5f9a7e]">ILLUSTRATIVE</span>}
               >
                 <div
                   className="h-56"
@@ -513,8 +514,8 @@ export function DashboardPreview() {
                       <XAxis dataKey="week" stroke={AXIS} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
                       <YAxis stroke={AXIS} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Legend wrapperStyle={{ fontSize: 10, color: AMBER }} />
-                      <Line type="monotone" dataKey="orders" stroke={AMBER} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: AMBER }} />
+                      <Legend wrapperStyle={{ fontSize: 10, color: PRIMARY }} />
+                      <Line type="monotone" dataKey="orders" stroke={PRIMARY} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: PRIMARY }} />
                       <Line type="monotone" dataKey="flagged" stroke={RED} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: RED }} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -527,7 +528,7 @@ export function DashboardPreview() {
               title="Order Risk Blotter"
               tag="OB"
               right={
-                <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#ffb000]">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#34d399]">
                   <Cpu className="size-3" />
                   {rows.length} MATCHING
                 </span>
@@ -536,7 +537,7 @@ export function DashboardPreview() {
               <div className="-m-3 overflow-x-auto">
                 <table className="w-full min-w-[720px] text-left text-[11px]">
                   <caption className="sr-only">Sample orders matching the selected filters</caption>
-                  <thead className="bg-[#ffb000]/[0.07] text-[10px] uppercase tracking-[0.14em] text-[#8a6a2a]">
+                  <thead className="bg-[#34d399]/[0.07] text-[10px] uppercase tracking-[0.14em] text-[#5f9a7e]">
                     <tr>
                       {["Order", "Product", "Pay", "Risk", "Score", "Reason", "Action"].map((h) => (
                         <th key={h} scope="col" className="px-3 py-2 font-bold">
@@ -549,10 +550,10 @@ export function DashboardPreview() {
                     {rows.slice(0, 8).map((o) => (
                       <tr
                         key={o.id}
-                        className="border-t border-[#ffb000]/10 transition-colors hover:bg-[#ffb000]/[0.06]"
+                        className="border-t border-[#34d399]/10 transition-colors hover:bg-[#34d399]/[0.06]"
                       >
                         <td className="whitespace-nowrap px-3 py-2 font-bold text-white">{o.id}</td>
-                        <td className="px-3 py-2 text-[#ffb000]">{o.product}</td>
+                        <td className="px-3 py-2 text-[#34d399]">{o.product}</td>
                         <td className="px-3 py-2">
                           <span className={o.payment === "COD" ? "text-[#ff3b5c]" : "text-[#22d3ee]"}>
                             {o.payment}
@@ -573,7 +574,7 @@ export function DashboardPreview() {
                             <span className={cn("w-7 text-right font-bold tabular-nums", riskText[o.risk])}>
                               {o.score}
                             </span>
-                            <span className="h-1.5 w-14 bg-[#ffb000]/10">
+                            <span className="h-1.5 w-14 bg-[#34d399]/10">
                               <span
                                 className={cn("block h-full", riskBar[o.risk])}
                                 style={{ width: `${Math.min(100, Math.max(0, o.score))}%` }}
@@ -581,7 +582,7 @@ export function DashboardPreview() {
                             </span>
                           </div>
                         </td>
-                        <td className="max-w-[200px] px-3 py-2 leading-relaxed text-[#c79a3a]">{o.reason}</td>
+                        <td className="max-w-[200px] px-3 py-2 leading-relaxed text-[#9fd9bb]">{o.reason}</td>
                         <td className="max-w-[200px] px-3 py-2 leading-relaxed text-white">{o.action}</td>
                       </tr>
                     ))}
@@ -589,7 +590,7 @@ export function DashboardPreview() {
                 </table>
 
                 {rows.length === 0 && (
-                  <p className="p-8 text-center text-xs uppercase tracking-widest text-[#8a6a2a]">
+                  <p className="p-8 text-center text-xs uppercase tracking-widest text-[#5f9a7e]">
                     No orders match. Adjust filters or search.
                   </p>
                 )}
@@ -606,10 +607,10 @@ export function DashboardPreview() {
                     <div className="mb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
                       <span className={riskText[m.level]}>{m.level}</span>
                       <span className="tabular-nums text-white">
-                        {m.count} <span className="text-[#8a6a2a]">· {m.pct}%</span>
+                        {m.count} <span className="text-[#5f9a7e]">· {m.pct}%</span>
                       </span>
                     </div>
-                    <div className="h-2 bg-[#ffb000]/10">
+                    <div className="h-2 bg-[#34d399]/10">
                       <div
                         className={cn("h-full transition-all duration-500", riskBar[m.level])}
                         style={{ width: `${m.pct}%`, boxShadow: "0 0 12px currentColor" }}
@@ -620,9 +621,9 @@ export function DashboardPreview() {
               </div>
             </Panel>
 
-            <Panel title="Priority Queue" tag="PQ" right={<span className="text-[9px] tracking-widest text-[#8a6a2a]">TOP 5</span>}>
+            <Panel title="Priority Queue" tag="PQ" right={<span className="text-[9px] tracking-widest text-[#5f9a7e]">TOP 5</span>}>
               {priority.length === 0 ? (
-                <p className="py-4 text-center text-[11px] uppercase tracking-widest text-[#8a6a2a]">
+                <p className="py-4 text-center text-[11px] uppercase tracking-widest text-[#5f9a7e]">
                   Queue empty
                 </p>
               ) : (
@@ -630,9 +631,9 @@ export function DashboardPreview() {
                   {priority.map((o, i) => (
                     <li
                       key={o.id}
-                      className="flex items-start gap-3 border border-[#ffb000]/15 bg-[#ffb000]/[0.03] p-2 transition-colors hover:border-[#ffb000]/50"
+                      className="flex items-start gap-3 border border-[#34d399]/15 bg-[#34d399]/[0.03] p-2 transition-colors hover:border-[#34d399]/50"
                     >
-                      <span className="mt-0.5 text-[10px] font-bold text-[#8a6a2a]">
+                      <span className="mt-0.5 text-[10px] font-bold text-[#5f9a7e]">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0 flex-1">
@@ -642,8 +643,8 @@ export function DashboardPreview() {
                             {o.score}
                           </span>
                         </div>
-                        <div className="truncate text-[10px] text-[#c79a3a]">{o.product}</div>
-                        <div className="mt-1 text-[10px] leading-relaxed text-[#8a6a2a]">{o.action}</div>
+                        <div className="truncate text-[10px] text-[#9fd9bb]">{o.product}</div>
+                        <div className="mt-1 text-[10px] leading-relaxed text-[#5f9a7e]">{o.action}</div>
                       </div>
                     </li>
                   ))}
@@ -658,8 +659,8 @@ export function DashboardPreview() {
                   ["Scoring model", "Preview", AMBER],
                   ["Auto-actions", "Needs approval", GREEN],
                 ].map(([k, v, c]) => (
-                  <div key={k} className="flex items-center justify-between border-b border-[#ffb000]/10 pb-1.5 last:border-0">
-                    <dt className="text-[#8a6a2a]">{k}</dt>
+                  <div key={k} className="flex items-center justify-between border-b border-[#34d399]/10 pb-1.5 last:border-0">
+                    <dt className="text-[#5f9a7e]">{k}</dt>
                     <dd style={{ color: c }}>{v}</dd>
                   </div>
                 ))}
@@ -669,9 +670,9 @@ export function DashboardPreview() {
         </div>
 
         {/* ===== Footnote ===== */}
-        <div className="flex flex-col gap-1 border-t border-[#ffb000]/20 pt-2 text-[10px] uppercase tracking-widest text-[#8a6a2a] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1 border-t border-[#34d399]/20 pt-2 text-[10px] uppercase tracking-widest text-[#5f9a7e] sm:flex-row sm:items-center sm:justify-between">
           <span>Scores and outcomes are illustrative values from a fictional dataset.</span>
-          <span className="flex items-center gap-1.5 text-[#00e676]">
+          <span className="flex items-center gap-1.5 text-[#a3e635]">
             <ShieldCheck className="size-3.5" />
             Suggested actions require your approval
           </span>
