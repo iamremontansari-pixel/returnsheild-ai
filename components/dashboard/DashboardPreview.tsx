@@ -14,13 +14,12 @@ import {
   YAxis,
 } from "recharts";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   ShieldCheck,
   ShieldAlert,
   Activity,
   ScanSearch,
   CircleDot,
+  type LucideIcon,
 } from "lucide-react";
 
 import {
@@ -38,6 +37,13 @@ const riskStyle: Record<RiskLevel, string> = {
   Low: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
   Medium: "border-amber-400/20 bg-amber-400/10 text-amber-300",
   High: "border-rose-400/20 bg-rose-400/10 text-rose-300",
+};
+
+const tooltipStyle = {
+  background: "#10251a",
+  border: "1px solid #294b38",
+  borderRadius: 12,
+  color: "#f4faf5",
 };
 
 function Filter<T extends string>({
@@ -89,7 +95,7 @@ function KpiCard({
   label: string;
   value: string;
   note: string;
-  icon: typeof Activity;
+  icon: LucideIcon;
   accent?: "green" | "red" | "gold" | "white";
 }) {
   const accentColor = {
@@ -166,40 +172,52 @@ export function DashboardPreview() {
     };
   }, [rows]);
 
-  const distribution = (["Low", "Medium", "High"] as const).map((level) => ({
-    level,
-    COD: rows.filter((o) => o.risk === level && o.payment === "COD").length,
-    Prepaid: rows.filter((o) => o.risk === level && o.payment === "Prepaid").length,
-  }));
+  const distribution = useMemo(
+    () =>
+      (["Low", "Medium", "High"] as const).map((level) => ({
+        level,
+        COD: rows.filter((o) => o.risk === level && o.payment === "COD").length,
+        Prepaid: rows.filter(
+          (o) => o.risk === level && o.payment === "Prepaid",
+        ).length,
+      })),
+    [rows],
+  );
 
-  const kpis = [
+  const kpis: {
+    label: string;
+    value: string;
+    note: string;
+    icon: LucideIcon;
+    accent: "green" | "red" | "gold" | "white";
+  }[] = [
     {
       label: "Orders analysed",
       value: stats.total.toString(),
       note: "Sample order set",
       icon: Activity,
-      accent: "white" as const,
+      accent: "white",
     },
     {
       label: "Risk flagged",
       value: stats.flagged.toString(),
       note: "Model estimate",
       icon: ShieldAlert,
-      accent: "red" as const,
+      accent: "red",
     },
-   {
-  label: "Historical RTO",
-  value: `${stats.rtoRate}%`,
-  note: "Sample outcomes",
-  icon: ScanSearch,
-  accent: "gold" as const,
-},
+    {
+      label: "Historical RTO",
+      value: `${stats.rtoRate}%`,
+      note: "Sample outcomes",
+      icon: ScanSearch,
+      accent: "gold",
+    },
     {
       label: "High-risk exposure",
       value: `₹${stats.exposure.toLocaleString("en-IN")}`,
       note: "Estimated exposure",
       icon: ShieldCheck,
-      accent: "green" as const,
+      accent: "green",
     },
   ];
 
@@ -258,27 +276,27 @@ export function DashboardPreview() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Filter
+              <Filter<PaymentFilter>
                 label="Payment"
                 value={payment}
-                options={["All", "COD", "Prepaid"] as const}
+                options={["All", "COD", "Prepaid"]}
                 onChange={setPayment}
               />
-              <Filter
+              <Filter<RiskFilter>
                 label="Risk"
                 value={risk}
-                options={["All", "Low", "Medium", "High"] as const}
+                options={["All", "Low", "Medium", "High"]}
                 onChange={setRisk}
               />
             </div>
           </div>
 
           {/* KPI cards */}
-          <dl className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {kpis.map((k) => (
               <KpiCard key={k.label} {...k} />
             ))}
-          </dl>
+          </div>
 
           {/* Analytics */}
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
@@ -325,20 +343,8 @@ export function DashboardPreview() {
                       axisLine={false}
                       tick={{ fontSize: 11 }}
                     />
-                    <Tooltip
-                      contentStyle={{
-                        background: "#10251a",
-                        border: "1px solid #294b38",
-                        borderRadius: 12,
-                        color: "#f4faf5",
-                      }}
-                    />
-                    <Legend
-                      wrapperStyle={{
-                        fontSize: 11,
-                        color: "#a7b8ac",
-                      }}
-                    />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: "#a7b8ac" }} />
                     <Bar
                       dataKey="COD"
                       fill="#f05269"
@@ -398,20 +404,8 @@ export function DashboardPreview() {
                       axisLine={false}
                       tick={{ fontSize: 11 }}
                     />
-                    <Tooltip
-                      contentStyle={{
-                        background: "#10251a",
-                        border: "1px solid #294b38",
-                        borderRadius: 12,
-                        color: "#f4faf5",
-                      }}
-                    />
-                    <Legend
-                      wrapperStyle={{
-                        fontSize: 11,
-                        color: "#a7b8ac",
-                      }}
-                    />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: "#a7b8ac" }} />
                     <Line
                       type="monotone"
                       dataKey="orders"
@@ -536,4 +530,3 @@ export function DashboardPreview() {
     </section>
   );
 }
-```
