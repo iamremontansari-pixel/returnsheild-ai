@@ -47,3 +47,4 @@ internet access.
 - Missing lucide icon: replace the named icon with one from the lucide-react list
 - Styles missing: check `postcss.config.mjs` exists and `app/globals.css`
   starts with `@import "tailwindcss";`
+                                                                                                           
