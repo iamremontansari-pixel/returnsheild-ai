@@ -1,4 +1,4 @@
-```css
+
 @import "tailwindcss";
 
 @theme {
@@ -222,4 +222,4 @@ a:hover {
     animation: none;
   }
 }
-```
+
