@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Menu, X, ShieldCheck, ArrowRight, Terminal } from "lucide-react";
 
-import { DashboardPreview } from "./DashboardTerminal";
-
+import { DashboardPreview } from "@/components/dashboard/DashboardPreview";
 const NAV = [
   { label: "Features", href: "#features" },
   { label: "Dashboard", href: "#dashboard" },
