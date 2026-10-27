@@ -1,80 +1,132 @@
-
+```css
 @import "tailwindcss";
 
 @theme {
-  /* Luxury institutional palette */
-  --color-navy: #080d18;
-  --color-navy-2: #0d1422;
-  --color-navy-3: #121d2d;
-  --color-navy-4: #19263a;
+  --color-navy: #07130f;
+  --color-navy-2: #0b1d15;
+  --color-navy-3: #10291e;
+  --color-navy-4: #183b2a;
 
-  /* Premium champagne gold */
-  --color-brand: #c6a56b;
-  --color-brand-dark: #a8874b;
-  --color-cyan: #53c9b6;
+  --color-brand: #16a36a;
+  --color-brand-dark: #087447;
+  --color-cyan: #63e6a5;
 
-  /* Text and surfaces */
-  --color-mist: #e9edf4;
-  --color-line: #29364a;
-  --color-muted: #91a0b5;
-  --color-soft: #c3ccda;
+  --color-mist: #0b1b14;
+  --color-line: #294b38;
+  --color-muted: #b2c5b8;
+  --color-soft: #dce9df;
 
-  /* Status colors */
-  --color-positive: #56c6a4;
-  --color-warning: #e5b86c;
-  --color-negative: #e87983;
+  --color-positive: #4de3a1;
+  --color-warning: #f2c36b;
+  --color-negative: #ff6678;
 
   --font-sans: Arial, Helvetica, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-/* Base */
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
-  background: #080d18;
+  background: #07130f;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  background: #080d18;
-  color: #e8edf5;
+  background:
+    radial-gradient(ellipse at 15% 0%, #123b27 0%, transparent 40%),
+    radial-gradient(ellipse at 90% 15%, #3b101b 0%, transparent 32%),
+    #07130f;
+  color: #f4faf5;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Premium selection */
 ::selection {
-  color: #080d18;
-  background: #c6a56b;
+  color: #06140c;
+  background: #63e6a5;
 }
 
-/* Accessible focus */
 :focus-visible {
-  outline: 2px solid #c6a56b;
-  outline-offset: 3px;
+  outline: 2px solid #63e6a5;
+  outline-offset: 4px;
 }
 
-/* Form controls */
-input,
-select,
-textarea,
-button {
-  font: inherit;
+/* Keep all formerly white sections and cards on the dark luxury theme */
+.bg-white {
+  background: linear-gradient(145deg, #11291d, #0a1b13) !important;
+  color: #f4faf5 !important;
 }
 
-input,
-select,
-textarea {
-  color-scheme: dark;
+.bg-mist {
+  background:
+    radial-gradient(ellipse at 0% 0%, #163e29 0%, transparent 45%),
+    linear-gradient(135deg, #0b1b14, #101a14) !important;
+  color: #f4faf5 !important;
 }
 
-button {
+/* Restore strong text contrast */
+.text-muted {
+  color: #b9cdbf !important;
+}
+
+.text-soft {
+  color: #dce9df !important;
+}
+
+.text-white\/50,
+.text-white\/60,
+.text-white\/70 {
+  color: #dce9df !important;
+}
+
+/* Premium green and ruby accents */
+.text-brand {
+  color: #63e6a5 !important;
+}
+
+.text-cyan {
+  color: #63e6a5 !important;
+}
+
+.border-line {
+  border-color: #294b38 !important;
+}
+
+.border-white\/10 {
+  border-color: rgb(220 233 223 / 14%) !important;
+}
+
+.terminal-panel {
+  border: 1px solid #294b38;
+  background: linear-gradient(145deg, #10251a, #091810);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 20%);
+}
+
+.terminal-divider {
+  height: 1px;
+  border: 0;
+  background: #294b38;
+}
+
+.data-label {
+  color: #b9cdbf;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.data-value {
+  color: #f4faf5;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+button,
+a {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -82,13 +134,26 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Financial figures */
+button,
+a,
+[role="button"] {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
 .font-mono,
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Premium entrance animation */
 @keyframes rise {
   from {
     opacity: 0;
@@ -105,38 +170,20 @@ button:disabled {
   animation: rise 450ms ease-out both;
 }
 
-/* Institutional panels */
-.terminal-panel {
-  border: 1px solid #29364a;
-  background: linear-gradient(145deg, #121d2d, #0d1422);
-  border-radius: 8px;
-  box-shadow: 0 12px 32px rgb(0 0 0 / 12%);
+/* Premium CTA glow */
+.bg-brand {
+  background: linear-gradient(135deg, #16a36a, #087447) !important;
 }
 
-.terminal-divider {
-  height: 1px;
-  border: 0;
-  background: #29364a;
+.bg-brand:hover {
+  background: linear-gradient(135deg, #20bd7d, #0b8955) !important;
+  box-shadow: 0 0 28px rgb(22 163 106 / 24%);
 }
 
-/* Data presentation */
-.data-label {
-  color: #91a0b5;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.data-value {
-  color: #f0e5d0;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Scrollbars */
+/* Subtle scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3a4659 #080d18;
+  scrollbar-color: #315740 #07130f;
 }
 
 *::-webkit-scrollbar {
@@ -145,20 +192,19 @@ button:disabled {
 }
 
 *::-webkit-scrollbar-track {
-  background: #080d18;
+  background: #07130f;
 }
 
 *::-webkit-scrollbar-thumb {
-  border: 2px solid #080d18;
+  border: 2px solid #07130f;
   border-radius: 8px;
-  background: #3a4659;
+  background: #315740;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #c6a56b;
+  background: #4b805b;
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -170,10 +216,10 @@ button:disabled {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 
   .hero-in {
     animation: none;
   }
 }
+```
