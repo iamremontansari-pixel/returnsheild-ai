@@ -22,6 +22,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import PaywallGate from "@/components/PaywallGate";
 
 type RiskLevel = "Low" | "Medium" | "High";
 
@@ -659,7 +660,7 @@ export default function DashboardPage() {
                       description="Order value alone cannot establish actual loss. Cost and logistics inputs are needed for a loss estimate."
                     />
                   )}
-                </section>
+                </section></PaywallGate>
               </div>
 
               <div className="min-w-0 space-y-4">
@@ -728,7 +729,7 @@ export default function DashboardPage() {
                       description="Data-quality indicators will be shown after an analysis is returned."
                     />
                   )}
-                </section>
+                </section><PaywallGate title="AI brief and recommendations">
 
                 <section className={`${panel} p-4`}>
                   <Heading
