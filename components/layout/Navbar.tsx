@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -81,17 +80,17 @@ export function Navbar() {
     if (checkingAuth) return null;
 
     if (signedIn) {
+      const plainLink = mobile
+        ? "px-3 py-3 text-[15px] font-medium text-soft"
+        : "px-3 py-2 text-[15px] font-medium text-soft hover:text-white";
+
       return (
         <>
-          <Link
-            href="/dashboard"
-            className={
-              mobile
-                ? "px-3 py-3 text-[15px] font-medium text-soft"
-                : "px-3 py-2 text-[15px] font-medium text-soft hover:text-white"
-            }
-          >
+          <Link href="/dashboard" className={plainLink}>
             Dashboard
+          </Link>
+          <Link href="/upload" className={plainLink}>
+            Upload orders
           </Link>
           <button
             type="button"
@@ -136,7 +135,7 @@ export function Navbar() {
     );
   }
 
-   if (pathname.startsWith("/dashboard")) {
+  if (pathname.startsWith("/dashboard")) {
     return null;
   }
 
