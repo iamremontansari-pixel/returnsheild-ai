@@ -65,17 +65,21 @@ const FIELD_INFO: { key: Field; label: string; required: boolean; hint: string }
 ];
 
 const GUESS: Record<Field, string[]> = {
-  pin: ["pincode", "pin code", "postal", "zip", "pin"],
-  pay: ["payment mode", "payment method", "payment type", "payment", "cod"],
-  status: ["order status", "shipment status", "delivery status", "status", "outcome"],
-  city: ["city", "district"],
-  value: ["order value", "invoice amount", "selling price", "amount", "value", "price", "total"],
-  product: ["product name", "product", "sku", "item", "title"],
-  orderId: ["order id", "order_id", "order item id", "order no", "orderid", "order number"],
+  pin: ["shipping zip", "pincode", "pin code", "postal", "zip", "pin"],
+  pay: ["payment method", "payment mode", "payment type", "payment", "cod"],
+  status: ["financial status", "order status", "shipment status", "delivery status", "status", "outcome"],
+  city: ["shipping city", "city", "district"],
+  value: ["total", "order value", "invoice amount", "selling price", "amount", "value", "price"],
+  product: ["lineitem name", "product name", "product", "sku", "item", "title"],
+  orderId: ["name", "order id", "order_id", "order no", "orderid", "order number"],
 };
 
 function guessColumn(headers: string[], field: Field): string {
   const lower = headers.map((h) => h.toLowerCase().trim());
+  for (const word of GUESS[field]) {
+    const i = lower.findIndex((h) => h === word);
+    if (i >= 0) return headers[i];
+  }
   for (const word of GUESS[field]) {
     const i = lower.findIndex((h) => h.includes(word));
     if (i >= 0) return headers[i];
@@ -83,7 +87,14 @@ function guessColumn(headers: string[], field: Field): string {
   return "";
 }
 
-const RETURN_WORDS = ["rto", "return", "undeliver", "refus", "not delivered"];
+const RETURN_WORDS = ["rto", "return", "undeliver", "refus", "not delivered", "refund", "void"];
+
+// A cell can hold several tags like "RTO, COD". Split them so each one can be ticked.
+const splitCell = (cell: string) =>
+  cell
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 
 /* ---------- The analysis ---------- */
 
@@ -153,7 +164,7 @@ function analyse(
     }
     const pay = (row[iPay] ?? "").toLowerCase();
     const isCod = pay.includes("cod") || pay.includes("cash");
-    const isReturn = returned.has((row[iStatus] ?? "").trim());
+    const isReturn = splitCell(row[iStatus] ?? "").some((p) => returned.has(p));
 
     r.total += 1;
     if (isCod) {
@@ -269,7 +280,7 @@ export function OrderUpload() {
     if (!mapping?.status) return [];
     const i = headers.indexOf(mapping.status);
     if (i < 0) return [];
-    return [...new Set(rows.map((r) => (r[i] ?? "").trim()).filter(Boolean))].slice(0, 40);
+    return [...new Set(rows.flatMap((r) => splitCell(r[i] ?? "")))].slice(0, 40);
   }, [headers, rows, mapping?.status]);
 
   function guessReturned(list: string[]) {
@@ -279,7 +290,7 @@ export function OrderUpload() {
   function statusesFor(h: string[], r: string[][], col: string) {
     const i = h.indexOf(col);
     if (i < 0) return [];
-    return [...new Set(r.map((x) => (x[i] ?? "").trim()).filter(Boolean))].slice(0, 40);
+    return [...new Set(r.flatMap((x) => splitCell(x[i] ?? "")))].slice(0, 40);
   }
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
@@ -357,8 +368,8 @@ export function OrderUpload() {
             See your real return risk
           </h1>
           <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[#9fd9bb]">
-            Download your orders report from Amazon, Flipkart or Meesho, save it as a CSV file and
-            upload it here. Your file is read inside your own browser. It is not sent anywhere.
+            Export your orders from Shopify as a CSV file and upload it here. Your file is read inside
+            your own browser. It is not sent anywhere.
           </p>
         </div>
 
@@ -377,6 +388,11 @@ export function OrderUpload() {
             )}
             <input type="file" accept=".csv,text/csv" onChange={onFile} className="sr-only" />
           </label>
+          <p className="mt-3 text-[11px] leading-relaxed text-[#9fd9bb]">
+            In Shopify: open <span className="font-bold text-white">Orders</span>, press{" "}
+            <span className="font-bold text-white">Export</span>, choose your dates, pick the CSV
+            option and press Export orders.
+          </p>
         </Box>
 
         {error && (
@@ -420,6 +436,10 @@ export function OrderUpload() {
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#5f9a7e]">
                   Which statuses mean the order came back?
                 </div>
+                <p className="mb-2 text-[11px] leading-relaxed text-[#9fd9bb]">
+                  Shopify does not mark RTO by itself. If you add an RTO tag to orders that came
+                  back, choose the Tags column above and tick RTO here.
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {statuses.map((s) => {
                     const on = returned.has(s);
@@ -485,7 +505,7 @@ export function OrderUpload() {
 
             {result.skipped > 0 && (
               <p className="text-[11px] text-[#ffb000]">
-                {result.skipped} rows were skipped because they had no 6-digit pincode.
+                {result.skipped} rows were skipped because they had no 6-digit pincode. Extra product lines of the same Shopify order are skipped on purpose, so each order is counted once.
               </p>
             )}
 
