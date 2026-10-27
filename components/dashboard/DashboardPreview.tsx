@@ -31,6 +31,7 @@ import {
   type RiskLevel,
 } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { RegionRisk } from "./RegionRisk";
 
 type PaymentFilter = "All" | PaymentMethod;
 type RiskFilter = "All" | RiskLevel;
@@ -668,6 +669,9 @@ export function DashboardPreview() {
             </Panel>
           </div>
         </div>
+
+        {/* ===== Risk by city and pincode ===== */}
+        <RegionRisk />
 
         {/* ===== Footnote ===== */}
         <div className="flex flex-col gap-1 border-t border-[#34d399]/20 pt-2 text-[10px] uppercase tracking-widest text-[#5f9a7e] sm:flex-row sm:items-center sm:justify-between">
