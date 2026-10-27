@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 
@@ -59,13 +60,13 @@ export default function SignupPage() {
       <div className="pointer-events-none absolute -bottom-24 -right-24 size-96 rounded-full bg-[#22d3ee]/[0.05] blur-[120px]" />
 
       <div className="relative w-full max-w-md">
-        <a
+        <Link
           href="/"
           className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#5f9a7e] transition-colors hover:text-[#34d399]"
         >
           <ArrowLeft className="size-3.5" />
           Back to home
-        </a>
+        </Link>
 
         <section className="relative border border-[#34d399]/30 bg-[#050505] shadow-[inset_0_0_40px_rgba(52,211,153,0.04)]">
           <span className="pointer-events-none absolute -left-px -top-px size-2 border-l-2 border-t-2 border-[#34d399]" />
@@ -92,12 +93,12 @@ export default function SignupPage() {
               <p className="mt-2 text-xs leading-relaxed text-[#9fd9bb]">
                 Thank you for signing up. We will contact you by email with the next steps.
               </p>
-              <a
+              <Link
                 href="/"
                 className="mt-6 inline-flex items-center gap-2 border border-[#34d399] bg-[#34d399] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-[#34d399]"
               >
                 Back to home
-              </a>
+              </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate className="space-y-4 p-5 sm:p-6">
