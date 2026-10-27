@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -14,11 +14,13 @@ import {
   YAxis,
 } from "recharts";
 import {
-  ShieldCheck,
-  ShieldAlert,
   Activity,
+  Cpu,
+  Radio,
   ScanSearch,
-  CircleDot,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,20 +35,108 @@ import { cn } from "@/lib/utils";
 type PaymentFilter = "All" | PaymentMethod;
 type RiskFilter = "All" | RiskLevel;
 
-const riskStyle: Record<RiskLevel, string> = {
-  Low: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
-  Medium: "border-amber-400/20 bg-amber-400/10 text-amber-300",
-  High: "border-rose-400/20 bg-rose-400/10 text-rose-300",
+/* ---------- Terminal palette ---------- */
+const AMBER = "#ffb000";
+const GREEN = "#00e676";
+const RED = "#ff3b5c";
+const CYAN = "#22d3ee";
+const GRID = "rgba(255,176,0,0.08)";
+const AXIS = "#8a6a2a";
+
+const riskText: Record<RiskLevel, string> = {
+  Low: "text-[#00e676]",
+  Medium: "text-[#ffb000]",
+  High: "text-[#ff3b5c]",
+};
+
+const riskChip: Record<RiskLevel, string> = {
+  Low: "border-[#00e676]/40 bg-[#00e676]/10 text-[#00e676]",
+  Medium: "border-[#ffb000]/40 bg-[#ffb000]/10 text-[#ffb000]",
+  High: "border-[#ff3b5c]/40 bg-[#ff3b5c]/10 text-[#ff3b5c]",
+};
+
+const riskBar: Record<RiskLevel, string> = {
+  Low: "bg-[#00e676]",
+  Medium: "bg-[#ffb000]",
+  High: "bg-[#ff3b5c]",
 };
 
 const tooltipStyle = {
-  background: "#10251a",
-  border: "1px solid #294b38",
-  borderRadius: 12,
-  color: "#f4faf5",
+  background: "#050505",
+  border: "1px solid #ffb000",
+  borderRadius: 0,
+  color: "#ffb000",
+  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+  fontSize: 11,
 };
 
-function Filter<T extends string>({
+const terminalCss = `
+@keyframes rs-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes rs-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.rs-marquee { animation: rs-marquee 60s linear infinite; }
+.rs-marquee:hover { animation-play-state: paused; }
+.rs-blink { animation: rs-blink 1.1s steps(1) infinite; }
+.rs-scan {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.025) 0px,
+    rgba(255,255,255,0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .rs-marquee, .rs-blink { animation: none; }
+}
+`;
+
+/* ---------- Building blocks ---------- */
+
+function Panel({
+  title,
+  tag,
+  right,
+  className,
+  children,
+}: {
+  title: string;
+  tag?: string;
+  right?: ReactNode;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={cn(
+        "relative border border-[#ffb000]/25 bg-[#050505]",
+        "shadow-[inset_0_0_40px_rgba(255,176,0,0.03)]",
+        className,
+      )}
+    >
+      {/* corner brackets */}
+      <span className="pointer-events-none absolute -left-px -top-px size-2 border-l-2 border-t-2 border-[#ffb000]" />
+      <span className="pointer-events-none absolute -right-px -top-px size-2 border-r-2 border-t-2 border-[#ffb000]" />
+      <span className="pointer-events-none absolute -bottom-px -left-px size-2 border-b-2 border-l-2 border-[#ffb000]" />
+      <span className="pointer-events-none absolute -bottom-px -right-px size-2 border-b-2 border-r-2 border-[#ffb000]" />
+
+      <header className="flex items-center justify-between gap-3 border-b border-[#ffb000]/25 bg-[#ffb000]/[0.06] px-3 py-1.5">
+        <div className="flex items-center gap-2">
+          <span className="bg-[#ffb000] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
+            {tag ?? "RS"}
+          </span>
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#ffb000]">
+            {title}
+          </h3>
+        </div>
+        {right}
+      </header>
+
+      <div className="p-3">{children}</div>
+    </section>
+  );
+}
+
+function Toggle<T extends string>({
   label,
   value,
   options,
@@ -58,12 +148,11 @@ function Filter<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#91a99a]">
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a6a2a]">
         {label}
       </span>
-
-      <div className="flex flex-wrap gap-1 rounded-xl border border-white/[0.07] bg-black/30 p-1">
+      <div className="flex border border-[#ffb000]/30">
         {options.map((o) => (
           <button
             key={o}
@@ -71,10 +160,10 @@ function Filter<T extends string>({
             aria-pressed={value === o}
             onClick={() => onChange(o)}
             className={cn(
-              "rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200",
+              "border-r border-[#ffb000]/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors last:border-r-0",
               value === o
-                ? "bg-emerald-500 text-[#03130b] shadow-[0_0_20px_rgba(16,185,129,0.2)]"
-                : "text-[#a7b8ac] hover:bg-white/[0.06] hover:text-white",
+                ? "bg-[#ffb000] text-black"
+                : "text-[#ffb000]/80 hover:bg-[#ffb000]/10 hover:text-[#ffb000]",
             )}
           >
             {o}
@@ -85,77 +174,96 @@ function Filter<T extends string>({
   );
 }
 
-function KpiCard({
+function Spark({ data, dataKey, color }: { data: object[]; dataKey: string; color: string }) {
+  return (
+    <div className="h-9 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
+          <Line
+            type="monotone"
+            dataKey={dataKey}
+            stroke={color}
+            strokeWidth={1.5}
+            dot={false}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function Kpi({
   label,
   value,
   note,
   icon: Icon,
-  accent = "green",
+  color,
+  spark,
+  sparkKey,
 }: {
   label: string;
   value: string;
   note: string;
   icon: LucideIcon;
-  accent?: "green" | "red" | "gold" | "white";
+  color: string;
+  spark: object[];
+  sparkKey: string;
 }) {
-  const accentColor = {
-    green: "text-emerald-300",
-    red: "text-rose-300",
-    gold: "text-amber-300",
-    white: "text-white",
-  }[accent];
-
-  const glowColor = {
-    green: "from-emerald-500/[0.12]",
-    red: "from-rose-500/[0.12]",
-    gold: "from-amber-500/[0.12]",
-    white: "from-white/[0.06]",
-  }[accent];
-
   return (
-    <div
-      className={cn(
-        "group relative overflow-hidden rounded-2xl border border-white/[0.08]",
-        "bg-gradient-to-br",
-        glowColor,
-        "to-[#0a1711] p-5",
-        "transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/25",
-      )}
-    >
-      <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-white/[0.02] blur-2xl transition-all group-hover:bg-emerald-300/[0.06]" />
-
-      <div className="relative flex items-center justify-between gap-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.13em] text-[#9aafa0]">
+    <div className="group relative border border-[#ffb000]/25 bg-[#050505] p-3 transition-colors hover:border-[#ffb000]/70">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8a6a2a]">
           {label}
         </span>
-        <Icon className={cn("size-[18px]", accentColor)} />
+        <Icon className="size-4" style={{ color }} />
       </div>
-
-      <div className="relative mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+      <div
+        className="mt-2 font-mono text-3xl font-bold tabular-nums tracking-tight"
+        style={{ color, textShadow: `0 0 18px ${color}55` }}
+      >
         {value}
       </div>
-
-      <div className="relative mt-3 flex items-center gap-2 text-xs text-[#9aafa0]">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-        {note}
-      </div>
+      <Spark data={spark} dataKey={sparkKey} color={color} />
+      <div className="mt-1 text-[10px] uppercase tracking-widest text-[#8a6a2a]">{note}</div>
     </div>
   );
 }
 
+/* ---------- Dashboard ---------- */
+
 export function DashboardPreview() {
   const [payment, setPayment] = useState<PaymentFilter>("All");
   const [risk, setRisk] = useState<RiskFilter>("All");
+  const [query, setQuery] = useState("");
+  const [now, setNow] = useState<string | null>(null);
 
-  const rows = useMemo(
-    () =>
-      sampleOrders.filter(
-        (o) =>
-          (payment === "All" || o.payment === payment) &&
-          (risk === "All" || o.risk === risk),
-      ),
-    [payment, risk],
-  );
+  // Clock is set after mount so server and client markup match.
+  useEffect(() => {
+    const tick = () =>
+      setNow(
+        new Date().toLocaleTimeString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour12: false,
+        }),
+      );
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return sampleOrders.filter(
+      (o) =>
+        (payment === "All" || o.payment === payment) &&
+        (risk === "All" || o.risk === risk) &&
+        (!q ||
+          o.id.toLowerCase().includes(q) ||
+          o.product.toLowerCase().includes(q) ||
+          o.reason.toLowerCase().includes(q)),
+    );
+  }, [payment, risk, query]);
 
   const stats = useMemo(() => {
     const flagged = rows.filter((o) => o.risk !== "Low").length;
@@ -163,7 +271,6 @@ export function DashboardPreview() {
     const exposure = rows
       .filter((o) => o.risk === "High")
       .reduce((s, o) => s + o.value, 0);
-
     return {
       total: rows.length,
       flagged,
@@ -177,354 +284,397 @@ export function DashboardPreview() {
       (["Low", "Medium", "High"] as const).map((level) => ({
         level,
         COD: rows.filter((o) => o.risk === level && o.payment === "COD").length,
-        Prepaid: rows.filter(
-          (o) => o.risk === level && o.payment === "Prepaid",
-        ).length,
+        Prepaid: rows.filter((o) => o.risk === level && o.payment === "Prepaid").length,
       })),
     [rows],
   );
 
-  const kpis: {
-    label: string;
-    value: string;
-    note: string;
-    icon: LucideIcon;
-    accent: "green" | "red" | "gold" | "white";
-  }[] = [
-    {
-      label: "Orders analysed",
-      value: stats.total.toString(),
-      note: "Sample order set",
-      icon: Activity,
-      accent: "white",
-    },
-    {
-      label: "Risk flagged",
-      value: stats.flagged.toString(),
-      note: "Model estimate",
-      icon: ShieldAlert,
-      accent: "red",
-    },
-    {
-      label: "Historical RTO",
-      value: `${stats.rtoRate}%`,
-      note: "Sample outcomes",
-      icon: ScanSearch,
-      accent: "gold",
-    },
-    {
-      label: "High-risk exposure",
-      value: `₹${stats.exposure.toLocaleString("en-IN")}`,
-      note: "Estimated exposure",
-      icon: ShieldCheck,
-      accent: "green",
-    },
-  ];
+  const mix = useMemo(
+    () =>
+      (["High", "Medium", "Low"] as const).map((level) => {
+        const count = rows.filter((o) => o.risk === level).length;
+        return {
+          level,
+          count,
+          pct: rows.length ? Math.round((count / rows.length) * 100) : 0,
+        };
+      }),
+    [rows],
+  );
+
+  const priority = useMemo(
+    () => [...rows].sort((a, b) => b.score - a.score).slice(0, 5),
+    [rows],
+  );
+
+  // Derived series for the KPI sparklines (illustrative).
+  const sparkData = useMemo(
+    () =>
+      weeklyOrders.map((w) => ({
+        ...w,
+        rate: w.orders ? Math.round((w.flagged / w.orders) * 100) : 0,
+      })),
+    [],
+  );
+
+  const tickerItems = useMemo(
+    () => [
+      { k: "ORDERS", v: String(stats.total), c: AMBER },
+      { k: "FLAGGED", v: String(stats.flagged), c: RED },
+      { k: "RTO", v: `${stats.rtoRate}%`, c: AMBER },
+      { k: "EXPOSURE", v: `₹${stats.exposure.toLocaleString("en-IN")}`, c: GREEN },
+      ...priority.map((o) => ({
+        k: o.id,
+        v: `${o.risk.toUpperCase()} ${o.score}`,
+        c: o.risk === "High" ? RED : o.risk === "Medium" ? AMBER : GREEN,
+      })),
+    ],
+    [stats, priority],
+  );
 
   return (
-    <section className="relative">
-      {/* Ambient background lighting */}
-      <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[3rem] bg-emerald-500/[0.06] blur-[100px]" />
-      <div className="pointer-events-none absolute -right-8 top-20 -z-10 h-72 w-72 rounded-full bg-rose-600/[0.07] blur-[100px]" />
+    <section
+      className="relative overflow-hidden border border-[#ffb000]/30 bg-black font-mono text-[#ffb000]"
+      aria-label="ReturnShield risk terminal"
+    >
+      <style>{terminalCss}</style>
 
-      <div className="overflow-hidden rounded-[1.75rem] border border-emerald-300/[0.15] bg-[#07130d]/95 shadow-[0_30px_100px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-        {/* Dashboard top bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.07] bg-white/[0.015] px-5 py-4 sm:px-7">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/[0.08]">
-              <ShieldCheck className="size-5 text-emerald-300" />
+      {/* ambient glow + scanlines */}
+      <div className="pointer-events-none absolute -left-20 -top-20 size-80 rounded-full bg-[#ffb000]/[0.07] blur-[100px]" />
+      <div className="pointer-events-none absolute -bottom-24 right-0 size-80 rounded-full bg-[#22d3ee]/[0.05] blur-[110px]" />
+      <div className="rs-scan pointer-events-none absolute inset-0 z-20" />
+
+      {/* ===== Top command bar ===== */}
+      <div className="relative z-10 flex flex-wrap items-center gap-3 border-b border-[#ffb000]/30 bg-[#0b0800] px-3 py-2">
+        <div className="flex items-center gap-2">
+          <span className="flex size-7 items-center justify-center bg-[#ffb000] text-black">
+            <ShieldCheck className="size-4" />
+          </span>
+          <div className="leading-tight">
+            <div className="text-sm font-bold tracking-[0.2em]">
+              RETURN<span className="text-white">SHIELD</span>
             </div>
-
-            <div>
-              <div className="text-sm font-bold tracking-wide text-white">
-                ReturnShield <span className="text-emerald-300">Intelligence</span>
-              </div>
-              <div className="mt-0.5 text-[10px] uppercase tracking-[0.17em] text-[#81998a]">
-                Return risk monitoring
-              </div>
+            <div className="text-[9px] uppercase tracking-[0.25em] text-[#8a6a2a]">
+              AI Risk Terminal · RTO Desk
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.06] px-3 py-1.5">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-40" />
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-emerald-200">
-              Preview environment
-            </span>
           </div>
         </div>
 
-        <div className="p-5 sm:p-7">
-          {/* Heading and filter controls */}
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
-                <CircleDot className="size-3" />
-                Risk intelligence overview
-              </div>
+        <label className="flex min-w-[200px] flex-1 items-center gap-2 border border-[#ffb000]/40 bg-black px-2 py-1.5 focus-within:border-[#ffb000] focus-within:shadow-[0_0_0_1px_#ffb000]">
+          <Search className="size-3.5 text-[#8a6a2a]" />
+          <span className="text-[11px] font-bold text-[#8a6a2a]">&gt;</span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="SEARCH ORDER ID / PRODUCT / REASON"
+            aria-label="Search orders"
+            className="w-full bg-transparent text-[11px] uppercase tracking-wider text-[#ffb000] outline-none placeholder:text-[#5c4718]"
+          />
+          <span className="rs-blink h-3.5 w-1.5 bg-[#ffb000]" />
+        </label>
 
-              <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                Your orders. <span className="text-emerald-300">Under control.</span>
-              </h2>
+        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.15em]">
+          <span className="flex items-center gap-1.5 text-[#00e676]">
+            <Radio className="size-3.5" />
+            <span className="relative flex size-1.5">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#00e676] opacity-60" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-[#00e676]" />
+            </span>
+            SIM FEED
+          </span>
+          <span className="tabular-nums text-white">
+            {now ?? "--:--:--"} <span className="text-[#8a6a2a]">IST</span>
+          </span>
+        </div>
+      </div>
 
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#a7b8ac]">
-                Explore sample order risks, historical patterns, and estimated
-                exposure in one unified view.
-              </p>
+      {/* ===== Ticker tape ===== */}
+      <div className="relative z-10 overflow-hidden border-b border-[#ffb000]/30 bg-black py-1.5">
+        <div className="rs-marquee flex w-max gap-8 whitespace-nowrap pr-8">
+          {[...tickerItems, ...tickerItems].map((t, i) => (
+            <span key={i} className="flex items-center gap-2 text-[11px] font-bold tracking-wider">
+              <span className="text-[#8a6a2a]">{t.k}</span>
+              <span style={{ color: t.c }}>{t.v}</span>
+              <span className="text-[#3a2c0c]">|</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative z-10 space-y-3 p-3">
+        {/* ===== Filters ===== */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#8a6a2a]">
+              Function · Risk Overview
             </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Filter<PaymentFilter>
-                label="Payment"
-                value={payment}
-                options={["All", "COD", "Prepaid"]}
-                onChange={setPayment}
-              />
-              <Filter<RiskFilter>
-                label="Risk"
-                value={risk}
-                options={["All", "Low", "Medium", "High"]}
-                onChange={setRisk}
-              />
-            </div>
+            <h2 className="text-lg font-bold uppercase tracking-[0.12em] text-white sm:text-xl">
+              Your orders. <span className="text-[#ffb000]">Under control.</span>
+            </h2>
           </div>
-
-          {/* KPI cards */}
-          <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {kpis.map((k) => (
-              <KpiCard key={k.label} {...k} />
-            ))}
+          <div className="flex flex-wrap items-center gap-4">
+            <Toggle<PaymentFilter>
+              label="Pay"
+              value={payment}
+              options={["All", "COD", "Prepaid"]}
+              onChange={setPayment}
+            />
+            <Toggle<RiskFilter>
+              label="Risk"
+              value={risk}
+              options={["All", "Low", "Medium", "High"]}
+              onChange={setRisk}
+            />
           </div>
+        </div>
 
-          {/* Analytics */}
-          <div className="mt-5 grid gap-4 xl:grid-cols-2">
-            <div className="rounded-2xl border border-white/[0.07] bg-[#091710] p-4 sm:p-5">
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-bold text-white">
-                    Risk distribution
-                  </h3>
-                  <p className="mt-1 text-xs text-[#8fa697]">
-                    Order count by payment method
-                  </p>
-                </div>
-                <span className="rounded-lg border border-emerald-400/15 bg-emerald-400/[0.06] px-2 py-1 text-[10px] font-semibold text-emerald-200">
-                  Sample data
-                </span>
-              </div>
+        {/* ===== KPI row ===== */}
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Kpi
+            label="Orders analysed"
+            value={stats.total.toString()}
+            note="Sample order set"
+            icon={Activity}
+            color="#ffffff"
+            spark={sparkData}
+            sparkKey="orders"
+          />
+          <Kpi
+            label="Risk flagged"
+            value={stats.flagged.toString()}
+            note="Model estimate"
+            icon={ShieldAlert}
+            color={RED}
+            spark={sparkData}
+            sparkKey="flagged"
+          />
+          <Kpi
+            label="Historical RTO"
+            value={`${stats.rtoRate}%`}
+            note="Sample outcomes"
+            icon={ScanSearch}
+            color={AMBER}
+            spark={sparkData}
+            sparkKey="rate"
+          />
+          <Kpi
+            label="High-risk exposure"
+            value={`₹${stats.exposure.toLocaleString("en-IN")}`}
+            note="Estimated exposure"
+            icon={ShieldCheck}
+            color={GREEN}
+            spark={sparkData}
+            sparkKey="flagged"
+          />
+        </div>
 
-              <div
-                className="h-60"
-                role="img"
-                aria-label="Bar chart of order counts by risk level and payment method"
+        {/* ===== Main grid ===== */}
+        <div className="grid gap-3 xl:grid-cols-12">
+          {/* Left: charts + blotter */}
+          <div className="space-y-3 xl:col-span-8">
+            <div className="grid gap-3 lg:grid-cols-2">
+              <Panel
+                title="Risk Distribution"
+                tag="RD"
+                right={<span className="text-[9px] tracking-widest text-[#8a6a2a]">SAMPLE</span>}
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={distribution}
-                    margin={{ top: 5, right: 5, left: -18, bottom: 0 }}
-                  >
-                    <CartesianGrid
-                      stroke="rgba(200,230,210,0.07)"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="level"
-                      stroke="#829889"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <YAxis
-                      stroke="#829889"
-                      allowDecimals={false}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 11, color: "#a7b8ac" }} />
-                    <Bar
-                      dataKey="COD"
-                      fill="#f05269"
-                      radius={[5, 5, 0, 0]}
-                      maxBarSize={38}
-                    />
-                    <Bar
-                      dataKey="Prepaid"
-                      fill="#34d399"
-                      radius={[5, 5, 0, 0]}
-                      maxBarSize={38}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/[0.07] bg-[#091710] p-4 sm:p-5">
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-bold text-white">
-                    Weekly order signals
-                  </h3>
-                  <p className="mt-1 text-xs text-[#8fa697]">
-                    Orders versus flagged orders
-                  </p>
+                <div
+                  className="h-56"
+                  role="img"
+                  aria-label="Bar chart of order counts by risk level and payment method"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={distribution} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
+                      <CartesianGrid stroke={GRID} vertical={false} />
+                      <XAxis dataKey="level" stroke={AXIS} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+                      <YAxis stroke={AXIS} allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+                      <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,176,0,0.06)" }} />
+                      <Legend wrapperStyle={{ fontSize: 10, color: AMBER }} />
+                      <Bar dataKey="COD" fill={RED} maxBarSize={30} />
+                      <Bar dataKey="Prepaid" fill={CYAN} maxBarSize={30} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <span className="rounded-lg border border-rose-400/15 bg-rose-400/[0.06] px-2 py-1 text-[10px] font-semibold text-rose-200">
-                  Illustrative
-                </span>
-              </div>
+              </Panel>
 
-              <div
-                className="h-60"
-                role="img"
-                aria-label="Line chart of weekly orders and flagged orders"
+              <Panel
+                title="Weekly Order Signals"
+                tag="WS"
+                right={<span className="text-[9px] tracking-widest text-[#8a6a2a]">ILLUSTRATIVE</span>}
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={weeklyOrders}
-                    margin={{ top: 5, right: 5, left: -18, bottom: 0 }}
-                  >
-                    <CartesianGrid
-                      stroke="rgba(200,230,210,0.07)"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="week"
-                      stroke="#829889"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <YAxis
-                      stroke="#829889"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 11, color: "#a7b8ac" }} />
-                    <Line
-                      type="monotone"
-                      dataKey="orders"
-                      stroke="#34d399"
-                      strokeWidth={2.5}
-                      dot={false}
-                      activeDot={{ r: 5, fill: "#34d399" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="flagged"
-                      stroke="#f05269"
-                      strokeWidth={2.5}
-                      dot={false}
-                      activeDot={{ r: 5, fill: "#f05269" }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          {/* Order table */}
-          <div className="mt-5 overflow-hidden rounded-2xl border border-white/[0.07] bg-[#091710]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] px-5 py-4">
-              <div>
-                <h3 className="text-sm font-bold text-white">
-                  Order risk signals
-                </h3>
-                <p className="mt-1 text-xs text-[#8fa697]">
-                  Selected orders and recommended review actions
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-xs text-[#a7b8ac]">
-                <ScanSearch className="size-3.5 text-emerald-300" />
-                {rows.length} matching orders
-              </div>
+                <div
+                  className="h-56"
+                  role="img"
+                  aria-label="Line chart of weekly orders and flagged orders"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={weeklyOrders} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
+                      <CartesianGrid stroke={GRID} />
+                      <XAxis dataKey="week" stroke={AXIS} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+                      <YAxis stroke={AXIS} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Legend wrapperStyle={{ fontSize: 10, color: AMBER }} />
+                      <Line type="monotone" dataKey="orders" stroke={AMBER} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: AMBER }} />
+                      <Line type="monotone" dataKey="flagged" stroke={RED} strokeWidth={2} dot={false} activeDot={{ r: 4, fill: RED }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </Panel>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[680px] text-left text-sm">
-                <caption className="sr-only">
-                  Sample orders matching the selected filters
-                </caption>
-
-                <thead className="bg-white/[0.025] text-[10px] uppercase tracking-[0.12em] text-[#829889]">
-                  <tr>
-                    {[
-                      "Order",
-                      "Product",
-                      "Payment",
-                      "Risk",
-                      "Reason",
-                      "Suggested action",
-                    ].map((h) => (
-                      <th key={h} scope="col" className="px-4 py-3 font-semibold">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {rows.slice(0, 6).map((o) => (
-                    <tr
-                      key={o.id}
-                      className="border-t border-white/[0.055] transition-colors hover:bg-white/[0.025]"
-                    >
-                      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-[#d4e3d8]">
-                        {o.id}
-                      </td>
-
-                      <td className="px-4 py-3 text-[#e7f0e9]">{o.product}</td>
-
-                      <td className="px-4 py-3 text-[#a7b8ac]">{o.payment}</td>
-
-                      <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold",
-                            riskStyle[o.risk],
-                          )}
-                        >
-                          <span className="size-1.5 rounded-full bg-current" />
-                          {o.risk} · {o.score}
-                        </span>
-                      </td>
-
-                      <td className="max-w-[200px] px-4 py-3 text-xs leading-relaxed text-[#a7b8ac]">
-                        {o.reason}
-                      </td>
-
-                      <td className="max-w-[200px] px-4 py-3 text-xs leading-relaxed text-[#d4e3d8]">
-                        {o.action}
-                      </td>
+            {/* Order blotter */}
+            <Panel
+              title="Order Risk Blotter"
+              tag="OB"
+              right={
+                <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#ffb000]">
+                  <Cpu className="size-3" />
+                  {rows.length} MATCHING
+                </span>
+              }
+            >
+              <div className="-m-3 overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-[11px]">
+                  <caption className="sr-only">Sample orders matching the selected filters</caption>
+                  <thead className="bg-[#ffb000]/[0.07] text-[10px] uppercase tracking-[0.14em] text-[#8a6a2a]">
+                    <tr>
+                      {["Order", "Product", "Pay", "Risk", "Score", "Reason", "Action"].map((h) => (
+                        <th key={h} scope="col" className="px-3 py-2 font-bold">
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rows.slice(0, 8).map((o) => (
+                      <tr
+                        key={o.id}
+                        className="border-t border-[#ffb000]/10 transition-colors hover:bg-[#ffb000]/[0.06]"
+                      >
+                        <td className="whitespace-nowrap px-3 py-2 font-bold text-white">{o.id}</td>
+                        <td className="px-3 py-2 text-[#ffb000]">{o.product}</td>
+                        <td className="px-3 py-2">
+                          <span className={o.payment === "COD" ? "text-[#ff3b5c]" : "text-[#22d3ee]"}>
+                            {o.payment}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={cn(
+                              "inline-block border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                              riskChip[o.risk],
+                            )}
+                          >
+                            {o.risk}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className={cn("w-7 text-right font-bold tabular-nums", riskText[o.risk])}>
+                              {o.score}
+                            </span>
+                            <span className="h-1.5 w-14 bg-[#ffb000]/10">
+                              <span
+                                className={cn("block h-full", riskBar[o.risk])}
+                                style={{ width: `${Math.min(100, Math.max(0, o.score))}%` }}
+                              />
+                            </span>
+                          </div>
+                        </td>
+                        <td className="max-w-[200px] px-3 py-2 leading-relaxed text-[#c79a3a]">{o.reason}</td>
+                        <td className="max-w-[200px] px-3 py-2 leading-relaxed text-white">{o.action}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-              {rows.length === 0 && (
-                <p className="p-8 text-center text-sm text-[#a7b8ac]">
-                  No sample orders match these filters. Try another combination.
+                {rows.length === 0 && (
+                  <p className="p-8 text-center text-xs uppercase tracking-widest text-[#8a6a2a]">
+                    No orders match. Adjust filters or search.
+                  </p>
+                )}
+              </div>
+            </Panel>
+          </div>
+
+          {/* Right rail */}
+          <div className="space-y-3 xl:col-span-4">
+            <Panel title="Risk Mix" tag="RM">
+              <div className="space-y-3">
+                {mix.map((m) => (
+                  <div key={m.level}>
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest">
+                      <span className={riskText[m.level]}>{m.level}</span>
+                      <span className="tabular-nums text-white">
+                        {m.count} <span className="text-[#8a6a2a]">· {m.pct}%</span>
+                      </span>
+                    </div>
+                    <div className="h-2 bg-[#ffb000]/10">
+                      <div
+                        className={cn("h-full transition-all duration-500", riskBar[m.level])}
+                        style={{ width: `${m.pct}%`, boxShadow: "0 0 12px currentColor" }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel title="Priority Queue" tag="PQ" right={<span className="text-[9px] tracking-widest text-[#8a6a2a]">TOP 5</span>}>
+              {priority.length === 0 ? (
+                <p className="py-4 text-center text-[11px] uppercase tracking-widest text-[#8a6a2a]">
+                  Queue empty
                 </p>
+              ) : (
+                <ol className="space-y-2">
+                  {priority.map((o, i) => (
+                    <li
+                      key={o.id}
+                      className="flex items-start gap-3 border border-[#ffb000]/15 bg-[#ffb000]/[0.03] p-2 transition-colors hover:border-[#ffb000]/50"
+                    >
+                      <span className="mt-0.5 text-[10px] font-bold text-[#8a6a2a]">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate text-[11px] font-bold text-white">{o.id}</span>
+                          <span className={cn("text-[11px] font-bold tabular-nums", riskText[o.risk])}>
+                            {o.score}
+                          </span>
+                        </div>
+                        <div className="truncate text-[10px] text-[#c79a3a]">{o.product}</div>
+                        <div className="mt-1 text-[10px] leading-relaxed text-[#8a6a2a]">{o.action}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
               )}
-            </div>
-          </div>
+            </Panel>
 
-          {/* Footnote */}
-          <div className="mt-4 flex flex-col gap-2 text-[11px] leading-relaxed text-[#81988a] sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              Scores and outcomes shown are illustrative values from a fictional dataset.
-            </span>
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="size-3.5 text-emerald-300" />
-              Suggested actions require your approval.
-            </span>
+            <Panel title="System Status" tag="SY">
+              <dl className="space-y-1.5 text-[10px] font-bold uppercase tracking-widest">
+                {[
+                  ["Data source", "Simulated", AMBER],
+                  ["Scoring model", "Preview", AMBER],
+                  ["Auto-actions", "Needs approval", GREEN],
+                ].map(([k, v, c]) => (
+                  <div key={k} className="flex items-center justify-between border-b border-[#ffb000]/10 pb-1.5 last:border-0">
+                    <dt className="text-[#8a6a2a]">{k}</dt>
+                    <dd style={{ color: c }}>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Panel>
           </div>
+        </div>
+
+        {/* ===== Footnote ===== */}
+        <div className="flex flex-col gap-1 border-t border-[#ffb000]/20 pt-2 text-[10px] uppercase tracking-widest text-[#8a6a2a] sm:flex-row sm:items-center sm:justify-between">
+          <span>Scores and outcomes are illustrative values from a fictional dataset.</span>
+          <span className="flex items-center gap-1.5 text-[#00e676]">
+            <ShieldCheck className="size-3.5" />
+            Suggested actions require your approval
+          </span>
         </div>
       </div>
     </section>
