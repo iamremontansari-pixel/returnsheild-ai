@@ -45,8 +45,8 @@ export const faqs = [
     q: "What customer data do you use?",
     a: "Only what is needed to estimate risk, such as payment method, address completeness and product history. We do not use sensitive personal attributes.",
   },
-  {
-    q: "Are the prices final?",
-    a: "No. All plans shown are proposed pricing until validated with early users.",
+   {
+    q: "What do I get for free?",
+    a: "You can upload your Shopify orders and see your COD and prepaid return rates, the value of your returned orders, and a risk score for single orders. Pro adds your riskiest pincodes, cities and products, plus AI recommendations.",
   },
 ] as const;
