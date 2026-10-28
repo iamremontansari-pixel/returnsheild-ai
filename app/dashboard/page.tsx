@@ -4,21 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Activity,
   AlertTriangle,
   ArrowRight,
-  BarChart3,
   CheckCircle2,
-  CircleHelp,
-  Database,
-  FileSearch,
-  LayoutDashboard,
   LoaderCircle,
-  LockKeyhole,
-  RefreshCw,
-  ShieldCheck,
+  LogOut,
   Sparkles,
-  Wallet,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PaywallGate from "@/components/PaywallGate";
@@ -52,11 +43,10 @@ type Analysis = {
   disclaimer: string;
 };
 
-const panel =
-  "rounded-lg border border-[#29374B] bg-[#101B2C]";
+const card = "rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6";
 
 const field =
-  "mt-2 w-full rounded-md border border-[#29374B] bg-[#0A1424] px-3 py-3 text-sm text-[#E6EDF5] outline-none focus:border-[#35C9B7]";
+  "mt-2 w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:border-[#34d399]";
 
 function money(value: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -66,105 +56,34 @@ function money(value: number) {
   }).format(value);
 }
 
-function Heading({
-  eyebrow,
-  title,
-  right,
-}: {
-  eyebrow: string;
-  title: string;
-  right?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div>
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[#8193AA]">
-          {eyebrow}
-        </p>
-        <h2 className="mt-1 text-sm font-semibold text-[#E8EEF6]">
-          {title}
-        </h2>
-      </div>
-      {right}
-    </div>
-  );
-}
+const levelColor = (level: RiskLevel) =>
+  level === "High" ? "#ff3b5c" : level === "Medium" ? "#ffb000" : "#34d399";
 
-function RiskRing({
-  score,
-  level,
-}: {
-  score: number;
-  level: RiskLevel;
-}) {
+function RiskRing({ score, level }: { score: number; level: RiskLevel }) {
   const safeScore = Math.max(0, Math.min(100, score));
   const circumference = 2 * Math.PI * 43;
-  const color =
-    level === "High"
-      ? "#EE7D88"
-      : level === "Medium"
-        ? "#E5B45F"
-        : "#42C6A5";
 
   return (
     <div className="relative h-36 w-36 shrink-0">
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+        <circle cx="50" cy="50" r="43" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="7" />
         <circle
           cx="50"
           cy="50"
           r="43"
           fill="none"
-          stroke="#263449"
-          strokeWidth="7"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="43"
-          fill="none"
-          stroke={color}
+          stroke={levelColor(level)}
           strokeWidth="7"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={
-            circumference * (1 - safeScore / 100)
-          }
+          strokeDashoffset={circumference * (1 - safeScore / 100)}
           className="transition-all duration-700"
         />
       </svg>
-
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-mono text-3xl font-semibold text-white">
-          {safeScore}
-        </span>
-        <span className="mt-1 text-[9px] uppercase tracking-wider text-[#8193AA]">
-          Out of 100
-        </span>
+        <span className="text-3xl font-bold tabular-nums text-white">{safeScore}</span>
+        <span className="text-xs text-white/60">out of 100</span>
       </div>
-    </div>
-  );
-}
-
-function EmptyPanel({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex min-h-44 flex-col items-center justify-center px-5 py-8 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-md border border-[#34445B] bg-[#0A1424] text-[#35C9B7]">
-        {icon}
-      </div>
-      <p className="mt-3 text-xs font-semibold text-[#DCE6F2]">
-        {title}
-      </p>
-      <p className="mt-2 max-w-xs text-[11px] leading-5 text-[#8193AA]">
-        {description}
-      </p>
     </div>
   );
 }
@@ -218,9 +137,7 @@ export default function DashboardPage() {
     };
   }, [router]);
 
-  async function analyzeOrder(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function analyzeOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError("");
@@ -262,20 +179,28 @@ export default function DashboardPage() {
 
       setResult(data as Analysis);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Something went wrong.",
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
   }
 
+  async function logOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setError("Unable to log out. Please try again.");
+      return;
+    }
+    router.replace("/login");
+    router.refresh();
+  }
+
   if (checkingAuth || !isAuthenticated) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#080F1C] text-[#DCE6F2]">
-        <LoaderCircle className="mr-3 h-5 w-5 animate-spin text-[#35C9B7]" />
-        Verifying secure session...
-      </main>
+      <div className="flex min-h-screen items-center justify-center text-white/80">
+        <LoaderCircle className="mr-3 h-5 w-5 animate-spin text-[#34d399]" />
+        Checking your login...
+      </div>
     );
   }
 
@@ -285,585 +210,292 @@ export default function DashboardPage() {
   const exposure = result?.financialExposure;
 
   return (
-    <main className="min-h-screen bg-[#080F1C] text-[#DCE6F2]">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-[218px] shrink-0 border-r border-[#263449] bg-[#0B1423] lg:flex lg:flex-col">
-          <Link href="/" className="flex h-[65px] items-center gap-3 border-b border-[#263449] px-5">
-            <div className="flex h-8 w-8 items-center justify-center rounded border border-[#35C9B7]/30 bg-[#35C9B7]/10">
-              <ShieldCheck className="h-4 w-4 text-[#35C9B7]" />
-            </div>
-            <span className="text-sm font-bold text-white">
-              ReturnShield <span className="text-[#35C9B7]">AI</span>
-            </span>
+    <div className="min-h-screen text-white">
+      {/* Top bar */}
+      <header className="border-b border-white/10 bg-black/40">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 sm:px-6">
+          <Link href="/" className="text-lg font-bold tracking-tight">
+            ReturnShield <span className="text-[#34d399]">AI</span>
           </Link>
-
-          <div className="px-4 pt-6">
-            <p className="px-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#71839A]">
-              Workspace
-            </p>
-            <nav className="mt-3 space-y-1">
-              <div className="flex items-center gap-3 rounded-md border border-[#35C9B7]/20 bg-[#35C9B7]/10 px-3 py-2.5 text-xs font-medium text-[#55D7C7]">
-                <LayoutDashboard className="h-4 w-4" />
-                Overview
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2.5 text-xs text-[#91A2B8]">
-                <FileSearch className="h-4 w-4" />
-                Order intelligence
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2.5 text-xs text-[#91A2B8]">
-                <Activity className="h-4 w-4" />
-                Risk monitor
-              </div>
-              <div className="flex items-center gap-3 px-3 py-2.5 text-xs text-[#91A2B8]">
-                <Database className="h-4 w-4" />
-                Data quality
-              </div>
-            </nav>
-          </div>
-
-          <div className="mt-auto border-t border-[#263449] p-4">
-            <div className="flex items-center gap-2 text-[10px] text-[#91A2B8]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#42C6A5]" />
-              Secure session active
-            </div>
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+            <Link href="/upload" className="rounded-lg bg-[#34d399] px-4 py-2 font-semibold text-black transition-colors hover:bg-[#6ee7b7]">
+              Upload orders
+            </Link>
+            <Link href="/billing" className="text-white/80 transition-colors hover:text-[#34d399]">
+              Billing
+            </Link>
+            <Link href="/" className="text-white/80 transition-colors hover:text-[#34d399]">
+              Main site
+            </Link>
             <button
-              onClick={async () => {
-                const { error } = await supabase.auth.signOut();
-                if (error) {
-                  setError("Unable to log out. Please try again.");
-                  return;
-                }
-                router.replace("/login");
-                router.refresh();
-              }}
-              className="mt-4 w-full rounded border border-[#34445B] px-3 py-2 text-left text-xs text-[#C0CDDC] hover:bg-white/5"
+              type="button"
+              onClick={logOut}
+              className="flex items-center gap-1.5 text-white/60 transition-colors hover:text-white"
             >
+              <LogOut className="h-4 w-4" />
               Log out
             </button>
-          </div>
-        </aside>
+          </nav>
+        </div>
+      </header>
 
-        <div className="min-w-0 flex-1">
-          <header className="flex min-h-[65px] items-center justify-between gap-3 border-b border-[#263449] bg-[#0B1423] px-4 sm:px-6">
-            <div>
-              <p className="text-[9px] uppercase tracking-[0.18em] text-[#8193AA]">
-                Risk intelligence / Order review
-              </p>
-              <h1 className="mt-1 text-sm font-semibold text-white">
-                Analytical workspace
-              </h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="hidden items-center gap-2 text-[10px] text-[#91A2B8] sm:flex">
-                <LockKeyhole className="h-3.5 w-3.5 text-[#35C9B7]" />
-                Authenticated
-              </span>
-              <Link
-                href="/"
-                className="rounded border border-[#34445B] px-3 py-2 text-[11px] text-[#C0CDDC] hover:bg-white/5"
-              >
-                Main site
-              </Link>
-            </div>
-          </header>
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <h1 className="text-3xl font-bold tracking-tight">Check one order</h1>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/70">
+          Enter the details of an order and we will tell you how likely it is to come back.
+          Have a whole file of orders? Use{" "}
+          <Link href="/upload" className="font-semibold text-[#34d399] underline underline-offset-4">
+            Upload orders
+          </Link>
+          .
+        </p>
 
-          <div className="mx-auto max-w-[1600px] p-4 sm:p-6">
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#35C9B7]">
-                  <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-[#35C9B7]" />
-                  Institutional risk analytics
-                </p>
-                <h2 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">
-                  Order risk intelligence
-                </h2>
-                <p className="mt-1 text-xs text-[#91A2B8]">
-                  Assess operational signals, review exposure, and identify
-                  missing evidence.
-                </p>
-              </div>
+        <div className="mt-8 grid items-start gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
+          {/* Form */}
+          <form onSubmit={analyzeOrder} className={card}>
+            <h2 className="text-lg font-semibold tracking-tight">Order details</h2>
 
-              <span className="rounded border border-[#29374B] bg-[#101B2C] px-3 py-2 text-[10px] text-[#91A2B8]">
-                {result ? "REPORT GENERATED" : "AWAITING ASSESSMENT"}
-              </span>
-            </div>
+            <label className="mt-4 block text-sm font-medium">
+              Product or category
+              <input
+                required
+                maxLength={120}
+                value={product}
+                onChange={(e) => setProduct(e.target.value)}
+                placeholder="e.g. Running shoes"
+                className={field}
+              />
+            </label>
 
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className={`${panel} p-4`}>
-                <p className="text-[10px] uppercase tracking-wider text-[#8193AA]">
-                  Order value
-                </p>
-                <p className="mt-2 font-mono text-xl text-white">
-                  {money(Number(amount) || 0)}
-                </p>
-                <p className="mt-1 text-[10px] text-[#8193AA]">
-                  Current form input
-                </p>
-              </div>
+            <label className="mt-4 block text-sm font-medium">
+              Order value (₹)
+              <input
+                required
+                type="number"
+                min="1"
+                max="10000000"
+                step="1"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className={field}
+              />
+            </label>
 
-              <div className={`${panel} p-4`}>
-                <p className="text-[10px] uppercase tracking-wider text-[#8193AA]">
-                  Risk classification
-                </p>
-                <p className="mt-2 text-xl font-semibold text-white">
-                  {result?.riskLevel ?? "Not assessed"}
-                </p>
-                <p className="mt-1 text-[10px] text-[#8193AA]">
-                  {result ? "Latest completed analysis" : "No result available"}
-                </p>
-              </div>
+            <label className="mt-4 block text-sm font-medium">
+              Payment method
+              <select value={payment} onChange={(e) => setPayment(e.target.value)} className={field}>
+                <option value="COD">Cash on delivery</option>
+                <option value="Prepaid">Prepaid</option>
+              </select>
+            </label>
 
-              <div className={`${panel} p-4`}>
-                <p className="text-[10px] uppercase tracking-wider text-[#8193AA]">
-                  Review score
-                </p>
-                <p className="mt-2 font-mono text-xl text-white">
-                  {typeof score === "number" ? `${score}/100` : "—"}
-                </p>
-                <p className="mt-1 text-[10px] text-[#8193AA]">
-                  {result ? "Provisional score" : "Generated after assessment"}
-                </p>
-              </div>
+            <label className="mt-4 block text-sm font-medium">
+              Delivery type
+              <select value={delivery} onChange={(e) => setDelivery(e.target.value)} className={field}>
+                <option value="Standard">Standard</option>
+                <option value="Express">Express</option>
+              </select>
+            </label>
 
-              <div className={`${panel} p-4`}>
-                <p className="text-[10px] uppercase tracking-wider text-[#8193AA]">
-                  Evidence gaps
-                </p>
-                <p className="mt-2 font-mono text-xl text-white">
-                  {result ? dataGaps.length : "—"}
-                </p>
-                <p className="mt-1 text-[10px] text-[#8193AA]">
-                  Missing information identified
-                </p>
-              </div>
-            </section>
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#34d399] px-4 py-3 text-sm font-semibold text-black transition-colors hover:bg-[#6ee7b7] disabled:opacity-60"
+            >
+              {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {loading ? "Checking..." : "Check this order"}
+              {!loading && <ArrowRight className="h-4 w-4" />}
+            </button>
 
-            <section className="mt-4 grid items-start gap-4 2xl:grid-cols-[300px_minmax(0,1fr)_310px]">
-              <form onSubmit={analyzeOrder} className={`${panel} p-4`}>
-                <Heading
-                  eyebrow="01 / Inputs"
-                  title="Order parameters"
-                  right={<FileSearch className="h-4 w-4 text-[#35C9B7]" />}
-                />
+            <p className="mt-4 text-xs leading-relaxed text-white/50">
+              We use only the details you enter here. The result is an estimate, not a promise.
+            </p>
 
-                <label className="block text-xs text-[#C0CDDC]">
-                  Product or category
-                  <input
-                    required
-                    maxLength={120}
-                    value={product}
-                    onChange={(e) => setProduct(e.target.value)}
-                    placeholder="e.g. Running shoes"
-                    className={field}
-                  />
-                </label>
-
-                <label className="mt-4 block text-xs text-[#C0CDDC]">
-                  Order value (INR)
-                  <input
-                    required
-                    type="number"
-                    min="1"
-                    max="10000000"
-                    step="1"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className={field}
-                  />
-                </label>
-
-                <label className="mt-4 block text-xs text-[#C0CDDC]">
-                  Payment method
-                  <select
-                    value={payment}
-                    onChange={(e) => setPayment(e.target.value)}
-                    className={field}
-                  >
-                    <option value="COD">Cash on delivery</option>
-                    <option value="Prepaid">Prepaid</option>
-                  </select>
-                </label>
-
-                <label className="mt-4 block text-xs text-[#C0CDDC]">
-                  Delivery service
-                  <select
-                    value={delivery}
-                    onChange={(e) => setDelivery(e.target.value)}
-                    className={field}
-                  >
-                    <option value="Standard">Standard</option>
-                    <option value="Express">Express</option>
-                  </select>
-                </label>
-
+            {error && (
+              <div role="alert" className="mt-4 rounded-xl border border-[#ff3b5c]/40 bg-[#ff3b5c]/10 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#ff8097]">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  Could not check this order
+                </div>
+                <p className="mt-2 break-words text-sm leading-relaxed text-[#ff8097]/90">{error}</p>
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-md border border-[#35C9B7]/30 bg-[#25B9AA] px-3 py-3 text-xs font-semibold text-[#06151B] hover:bg-[#35C9B7] disabled:opacity-60"
+                  type="button"
+                  onClick={() => setError("")}
+                  className="mt-2 text-sm text-[#34d399] underline underline-offset-4"
                 >
-                  {loading ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4" />
-                  )}
-                  {loading ? "Analyzing..." : "Run assessment"}
-                  {!loading && <ArrowRight className="h-3.5 w-3.5" />}
+                  Close
                 </button>
+              </div>
+            )}
+          </form>
 
-                <p className="mt-3 border-t border-[#29374B] pt-3 text-[10px] leading-5 text-[#8193AA]">
-                  Assessment uses only supplied order information and available
-                  model output.
-                </p>
+          {/* Results */}
+          <div className="min-w-0 space-y-5">
+            <section className={card}>
+              <h2 className="text-lg font-semibold tracking-tight">Return risk</h2>
 
-                {error && (
-                  <div role="alert" className="mt-4 rounded border border-rose-500/30 bg-rose-500/5 p-3">
-                    <div className="flex gap-2 text-xs font-semibold text-rose-200">
-                      <AlertTriangle className="h-4 w-4 shrink-0" />
-                      Analysis unavailable
-                    </div>
-                    <p className="mt-2 break-words text-[11px] leading-5 text-rose-200/80">
-                      {error}
+              {result && typeof score === "number" ? (
+                <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row">
+                  <RiskRing score={score} level={result.riskLevel} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-2xl font-bold" style={{ color: levelColor(result.riskLevel) }}>
+                      {result.riskLevel} risk
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setError("")}
-                      className="mt-2 text-[10px] text-[#35C9B7] underline"
-                    >
-                      Dismiss
-                    </button>
+                    <p className="mt-2 text-sm leading-relaxed text-white/70">
+                      {result.scoreType || "This score is an estimate from the details you entered."}
+                    </p>
+                    <p className="mt-3 text-sm text-white/50">
+                      This is a guide, not an exact chance of return.
+                    </p>
                   </div>
-                )}
-              </form>
-
-              {/* ===== MIDDLE COLUMN ===== */}
-              <div className="min-w-0 space-y-4">
-                <section className={`${panel} p-4`}>
-                  <Heading
-                    eyebrow="02 / Quantitative overview"
-                    title="Risk score & classification"
-                    right={<Activity className="h-4 w-4 text-[#35C9B7]" />}
-                  />
-
-                  {result && typeof score === "number" ? (
-                    <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
-                      <RiskRing score={score} level={result.riskLevel} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-lg font-semibold text-white">
-                          {result.riskLevel} risk
-                        </p>
-                        <p className="mt-2 text-xs leading-6 text-[#A9B8CA]">
-                          {result.scoreType ||
-                            "Provisional operational review score."}
-                        </p>
-                        <div className="mt-3 inline-flex rounded border border-[#29374B] bg-[#0A1424] px-2.5 py-1.5 text-[10px] text-[#91A2B8]">
-                          Not a validated return probability
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <EmptyPanel
-                      icon={<BarChart3 className="h-5 w-5" />}
-                      title="Risk score not yet available"
-                      description="Run an assessment to display the score returned by the analysis API. No synthetic score is shown."
-                    />
-                  )}
-                </section>
-
-                {/* ===== LOCK 1 START: risk drivers + exposure (Pro) ===== */}
-                <PaywallGate title="Risk drivers and exposure">
-                  <section className={`${panel} p-4`}>
-                    <Heading
-                      eyebrow="03 / Factor attribution"
-                      title="Risk-driver contribution"
-                      right={<Activity className="h-4 w-4 text-[#35C9B7]" />}
-                    />
-
-                    {factors.length > 0 ? (
-                      <div className="space-y-4">
-                        {factors.map((factor, index) => {
-                          const width = Math.max(
-                            0,
-                            Math.min(100, Math.abs(factor.points)),
-                          );
-
-                          return (
-                            <div key={`${factor.name}-${index}`}>
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-xs font-medium text-[#DCE6F2]">
-                                  {factor.name}
-                                </p>
-                                <span className="font-mono text-[11px] text-[#35C9B7]">
-                                  {factor.points > 0 ? "+" : ""}
-                                  {factor.points} pts
-                                </span>
-                              </div>
-                              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#263449]">
-                                <div
-                                  className="h-full rounded-full bg-[#35BFAF]"
-                                  style={{ width: `${width}%` }}
-                                />
-                              </div>
-                              <p className="mt-2 text-[10px] leading-5 text-[#8193AA]">
-                                {factor.explanation}
-                              </p>
-                              <p className="text-[10px] leading-5 text-[#71839A]">
-                                Evidence: {factor.evidence}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <EmptyPanel
-                        icon={<Activity className="h-5 w-5" />}
-                        title="No factor data"
-                        description="Factor contribution bars will use the score-driver values returned by the API."
-                      />
-                    )}
-                  </section>
-
-                  <section className={`${panel} p-4`}>
-                    <Heading
-                      eyebrow="04 / Exposure analysis"
-                      title="Financial exposure"
-                      right={<Wallet className="h-4 w-4 text-[#35C9B7]" />}
-                    />
-
-                    {result && exposure ? (
-                      <>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-md border border-[#29374B] bg-[#0A1424] p-3">
-                            <p className="text-[10px] text-[#8193AA]">
-                              Gross order value
-                            </p>
-                            <p className="mt-2 font-mono text-lg text-white">
-                              {money(exposure.orderValueINR)}
-                            </p>
-                          </div>
-                          <div className="rounded-md border border-[#29374B] bg-[#0A1424] p-3">
-                            <p className="text-[10px] text-[#8193AA]">
-                              Estimated loss
-                            </p>
-                            <p className="mt-2 font-mono text-lg text-white">
-                              {exposure.estimatedLossINR == null
-                                ? "Not established"
-                                : money(exposure.estimatedLossINR)}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-[10px] leading-5 text-[#8193AA]">
-                          {exposure.note}
-                        </p>
-                      </>
-                    ) : (
-                      <EmptyPanel
-                        icon={<Wallet className="h-5 w-5" />}
-                        title="Exposure analysis pending"
-                        description="Order value alone cannot establish actual loss. Cost and logistics inputs are needed for a loss estimate."
-                      />
-                    )}
-                  </section>
-                </PaywallGate>
-                {/* ===== LOCK 1 END ===== */}
-              </div>
-
-              {/* ===== RIGHT COLUMN ===== */}
-              <div className="min-w-0 space-y-4">
-                <section className={`${panel} p-4`}>
-                  <Heading
-                    eyebrow="05 / Data controls"
-                    title="Data-quality matrix"
-                    right={<Database className="h-4 w-4 text-[#35C9B7]" />}
-                  />
-
-                  {result ? (
-                    <div className="space-y-2">
-                      {[
-                        {
-                          label: "Order inputs",
-                          status: "Available",
-                          good: true,
-                        },
-                        {
-                          label: "Customer history",
-                          status: "Not supplied",
-                          good: false,
-                        },
-                        {
-                          label: "Historical return outcomes",
-                          status: "Not supplied",
-                          good: false,
-                        },
-                        {
-                          label: "Validated prediction model",
-                          status: "Not established",
-                          good: false,
-                        },
-                        {
-                          label: "Additional data gaps",
-                          status:
-                            dataGaps.length === 0
-                              ? "Not reported"
-                              : `${dataGaps.length} identified`,
-                          good: false,
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className="flex items-center justify-between gap-2 border-b border-[#29374B] py-2.5 last:border-0"
-                        >
-                          <span className="text-[10px] text-[#A9B8CA]">
-                            {item.label}
-                          </span>
-                          <span
-                            className={`shrink-0 text-[9px] font-medium ${
-                              item.good
-                                ? "text-emerald-300"
-                                : "text-amber-300"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyPanel
-                      icon={<Database className="h-5 w-5" />}
-                      title="Awaiting data assessment"
-                      description="Data-quality indicators will be shown after an analysis is returned."
-                    />
-                  )}
-                </section>
-
-                {/* ===== LOCK 2 START: AI brief + recommendations (Pro) ===== */}
-                <PaywallGate title="AI brief and recommendations">
-                  <section className={`${panel} p-4`}>
-                    <Heading
-                      eyebrow="06 / Analyst commentary"
-                      title="Executive intelligence brief"
-                      right={<Sparkles className="h-4 w-4 text-[#35C9B7]" />}
-                    />
-
-                    {result?.executiveSummary ? (
-                      <>
-                        <p className="text-xs leading-6 text-[#B9C7D8]">
-                          {result.executiveSummary}
-                        </p>
-                        <div className="mt-4 flex items-center justify-between border-t border-[#29374B] pt-3">
-                          <span className="text-[10px] text-[#8193AA]">
-                            Assessment confidence
-                          </span>
-                          <span className="text-[10px] font-semibold text-[#E5B45F]">
-                            {result.confidence || "Not provided"}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between">
-                          <span className="text-[10px] text-[#8193AA]">
-                            Action priority
-                          </span>
-                          <span className="text-[10px] font-semibold text-[#DCE6F2]">
-                            {result.actionPriority || "Review"}
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <EmptyPanel
-                        icon={<CircleHelp className="h-5 w-5" />}
-                        title="No executive brief"
-                        description="This section appears when the API returns an executive summary."
-                      />
-                    )}
-                  </section>
-
-                  <section className={`${panel} p-4`}>
-                    <Heading
-                      eyebrow="07 / Evidence review"
-                      title="Findings & recommendations"
-                      right={<CheckCircle2 className="h-4 w-4 text-[#35C9B7]" />}
-                    />
-
-                    {result ? (
-                      <div className="space-y-4">
-                        <div>
-                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#8193AA]">
-                            Observations
-                          </p>
-                          <ul className="space-y-2">
-                            {result.reasons.map((reason, index) => (
-                              <li
-                                key={`reason-${index}`}
-                                className="flex items-start gap-2 text-[11px] leading-5 text-[#B9C7D8]"
-                              >
-                                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#35C9B7]" />
-                                {reason}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="border-t border-[#29374B] pt-4">
-                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#8193AA]">
-                            Recommended actions
-                          </p>
-                          <ul className="space-y-3">
-                            {result.recommendations.map((item, index) => (
-                              <li
-                                key={`recommendation-${index}`}
-                                className="flex items-start gap-2 text-[11px] leading-5 text-[#B9C7D8]"
-                              >
-                                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#35C9B7]" />
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {dataGaps.length > 0 && (
-                          <div className="border-t border-[#29374B] pt-4">
-                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
-                              Missing evidence
-                            </p>
-                            <ul className="space-y-2">
-                              {dataGaps.map((gap, index) => (
-                                <li
-                                  key={`gap-${index}`}
-                                  className="text-[11px] leading-5 text-[#B9C7D8]"
-                                >
-                                  • {gap}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        <p className="border-t border-[#29374B] pt-3 text-[10px] leading-5 text-[#8193AA]">
-                          {result.disclaimer}
-                        </p>
-                      </div>
-                    ) : (
-                      <EmptyPanel
-                        icon={<FileSearch className="h-5 w-5" />}
-                        title="No findings available"
-                        description="Evidence and recommendations will appear here after a successful API response."
-                      />
-                    )}
-                  </section>
-                </PaywallGate>
-                {/* ===== LOCK 2 END ===== */}
-              </div>
+                </div>
+              ) : (
+                <p className="mt-4 text-sm leading-relaxed text-white/60">
+                  Your result will show here. Fill in the order details and press
+                  &ldquo;Check this order&rdquo;.
+                </p>
+              )}
             </section>
 
-            <footer className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#263449] py-4 text-[9px] uppercase tracking-wider text-[#71839A]">
-              <span>ReturnShield AI · Risk intelligence</span>
-              <span className="flex items-center gap-2">
-                <LockKeyhole className="h-3 w-3" />
-                Authenticated workspace
-              </span>
-            </footer>
+            {/* ===== LOCK START: reasons, money and advice (Pro) ===== */}
+            <PaywallGate
+              title="Why it is risky and what to do"
+              description="See what pushes this order's risk up, how much money is at stake, and what to do about it."
+            >
+              <section className={card}>
+                <h2 className="text-lg font-semibold tracking-tight">What pushes the risk up</h2>
+
+                {factors.length > 0 ? (
+                  <div className="mt-5 space-y-5">
+                    {factors.map((factor, index) => {
+                      const width = Math.max(0, Math.min(100, Math.abs(factor.points)));
+                      return (
+                        <div key={`${factor.name}-${index}`}>
+                          <div className="flex items-center justify-between gap-3 text-sm">
+                            <p className="font-semibold">{factor.name}</p>
+                            <span className="font-bold tabular-nums text-[#34d399]">
+                              {factor.points > 0 ? "+" : ""}
+                              {factor.points} points
+                            </span>
+                          </div>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div className="h-full rounded-full bg-[#34d399]" style={{ width: `${width}%` }} />
+                          </div>
+                          <p className="mt-2 text-sm leading-relaxed text-white/70">{factor.explanation}</p>
+                          <p className="text-xs leading-relaxed text-white/50">Based on: {factor.evidence}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-white/60">
+                    The reasons will show here after you check an order.
+                  </p>
+                )}
+              </section>
+
+              <section className={`${card} mt-5`}>
+                <h2 className="text-lg font-semibold tracking-tight">Money at stake</h2>
+
+                {result && exposure ? (
+                  <>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                        <p className="text-sm text-white/60">Order value</p>
+                        <p className="mt-1 text-xl font-bold tabular-nums">{money(exposure.orderValueINR)}</p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                        <p className="text-sm text-white/60">Estimated loss</p>
+                        <p className="mt-1 text-xl font-bold tabular-nums">
+                          {exposure.estimatedLossINR == null
+                            ? "Not known yet"
+                            : money(exposure.estimatedLossINR)}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-white/60">{exposure.note}</p>
+                  </>
+                ) : (
+                  <p className="mt-4 text-sm text-white/60">
+                    The money at stake will show here after you check an order.
+                  </p>
+                )}
+              </section>
+
+              <section className={`${card} mt-5`}>
+                <h2 className="text-lg font-semibold tracking-tight">Summary and advice</h2>
+
+                {result ? (
+                  <div className="mt-4 space-y-5">
+                    {result.executiveSummary && (
+                      <p className="text-sm leading-relaxed text-white/80">{result.executiveSummary}</p>
+                    )}
+
+                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                      <span className="text-white/60">
+                        How sure we are: <span className="font-semibold text-white">{result.confidence || "Not given"}</span>
+                      </span>
+                      <span className="text-white/60">
+                        How soon to act: <span className="font-semibold text-white">{result.actionPriority || "Review"}</span>
+                      </span>
+                    </div>
+
+                    {result.reasons.length > 0 && (
+                      <div className="border-t border-white/10 pt-5">
+                        <p className="mb-2 text-sm font-semibold">What we noticed</p>
+                        <ul className="space-y-2">
+                          {result.reasons.map((reason, index) => (
+                            <li key={`reason-${index}`} className="flex items-start gap-2 text-sm leading-relaxed text-white/80">
+                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#34d399]" />
+                              {reason}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {result.recommendations.length > 0 && (
+                      <div className="border-t border-white/10 pt-5">
+                        <p className="mb-2 text-sm font-semibold">What you can do</p>
+                        <ul className="space-y-2.5">
+                          {result.recommendations.map((item, index) => (
+                            <li key={`recommendation-${index}`} className="flex items-start gap-2 text-sm leading-relaxed text-white/80">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#34d399]" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {dataGaps.length > 0 && (
+                      <div className="border-t border-white/10 pt-5">
+                        <p className="mb-2 text-sm font-semibold text-[#ffb000]">Information we are missing</p>
+                        <ul className="space-y-2">
+                          {dataGaps.map((gap, index) => (
+                            <li key={`gap-${index}`} className="text-sm leading-relaxed text-white/80">
+                              • {gap}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <p className="border-t border-white/10 pt-4 text-xs leading-relaxed text-white/50">
+                      {result.disclaimer}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-white/60">
+                    The summary and advice will show here after you check an order.
+                  </p>
+                )}
+              </section>
+            </PaywallGate>
+            {/* ===== LOCK END ===== */}
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
