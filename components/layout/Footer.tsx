@@ -1,11 +1,63 @@
-import Link from "next/link";
+"use client";
 
-const columns = [
-  { title: "Product", links: [["Features", "/features"], ["How it works", "/how-it-works"], ["Pricing", "/pricing"]] },
-  { title: "Account", links: [["Log in", "/login"], ["Create account", "/register"]] },
-] as const;
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
+type FooterLink = readonly [string, string];
+
+const productLinks: readonly FooterLink[] = [
+  ["Features", "/features"],
+  ["How it works", "/how-it-works"],
+  ["Pricing", "/pricing"],
+];
+
+const signedOutLinks: readonly FooterLink[] = [
+  ["Log in", "/login"],
+  ["Create account", "/register"],
+];
+
+const signedInLinks: readonly FooterLink[] = [
+  ["Dashboard", "/dashboard"],
+  ["Upload orders", "/upload"],
+  ["Billing", "/billing"],
+];
 
 export function Footer() {
+  const [signedIn, setSignedIn] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) {
+        setSignedIn(Boolean(data.session));
+        setChecking(false);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(Boolean(session));
+      setChecking(false);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const columns: { title: string; links: readonly FooterLink[] }[] = [
+    { title: "Product", links: productLinks },
+    {
+      title: "Account",
+      links: checking ? [] : signedIn ? signedInLinks : signedOutLinks,
+    },
+  ];
+
   return (
     <footer className="relative border-t border-[#34d399]/30 bg-black font-mono text-[#9fd9bb]">
       <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#34d399] to-transparent opacity-60" />
