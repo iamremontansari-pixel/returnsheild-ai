@@ -245,3 +245,8 @@ a:hover {
     animation: none;
   }
 }
+
+
+h1 {
+  font-family: var(--font-serif), Georgia, serif;
+}
