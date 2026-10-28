@@ -210,24 +210,19 @@ const levelText = (pct: number) =>
 const levelBar = (pct: number) =>
   pct >= 30 ? "bg-[#ff3b5c]" : pct >= 20 ? "bg-[#ffb000]" : "bg-[#a3e635]";
 
-function Box({ title, tag, children }: { title: string; tag: string; children: ReactNode }) {
+function Box({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="relative border border-[#34d399]/25 bg-[#050505]">
-      <header className="flex items-center gap-2 border-b border-[#34d399]/25 bg-[#34d399]/[0.06] px-3 py-1.5">
-        <span className="bg-[#34d399] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-black">
-          {tag}
-        </span>
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#34d399]">{title}</h2>
-      </header>
-      <div className="p-3">{children}</div>
+    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+      <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
 
 function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="border border-[#34d399]/25 bg-[#050505] p-3">
-      <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#5f9a7e]">{label}</div>
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="text-sm text-white/60">{label}</div>
       <div className={cn("mt-1 text-2xl font-bold tabular-nums", color ?? "text-white")}>{value}</div>
     </div>
   );
@@ -235,27 +230,30 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 
 function GroupTable({ title, rows, empty }: { title: string; rows: Group[]; empty: string }) {
   return (
-    <div className="border border-[#34d399]/15">
-      <div className="border-b border-[#34d399]/15 bg-[#34d399]/[0.04] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white">
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+      <div className="border-b border-white/10 px-4 py-3 text-sm font-semibold text-white">
         {title}
       </div>
       {rows.length === 0 ? (
-        <p className="p-4 text-[11px] text-[#5f9a7e]">{empty}</p>
+        <p className="p-4 text-sm text-white/60">{empty}</p>
       ) : (
         <ul>
           {rows.map((g) => {
             const pct = rate(g);
             return (
-              <li key={g.key} className="border-t border-[#34d399]/10 px-3 py-2 first:border-t-0">
-                <div className="flex items-center justify-between gap-3 text-[11px]">
-                  <span className="truncate font-bold text-white">{g.key}</span>
+              <li key={g.key} className="border-t border-white/10 px-4 py-3 first:border-t-0">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="truncate font-semibold text-white">{g.key}</span>
                   <span className={cn("font-bold tabular-nums", levelText(pct))}>{pct}%</span>
                 </div>
-                <div className="mt-1.5 h-1.5 bg-[#34d399]/10">
-                  <div className={cn("h-full", levelBar(pct))} style={{ width: `${Math.min(100, pct * 2)}%` }} />
+                <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                  <div
+                    className={cn("h-full rounded-full", levelBar(pct))}
+                    style={{ width: `${Math.min(100, pct * 2)}%` }}
+                  />
                 </div>
-                <div className="mt-1 text-[10px] uppercase tracking-widest text-[#5f9a7e]">
-                  {g.orders} orders · {g.returns} returned
+                <div className="mt-1.5 text-xs text-white/50">
+                  {g.orders} orders, {g.returns} returned
                 </div>
               </li>
             );
@@ -356,62 +354,65 @@ export function OrderUpload() {
   }
 
   const select =
-    "w-full border border-[#34d399]/40 bg-black px-2 py-2 text-xs text-[#34d399] outline-none focus:border-[#34d399]";
+    "w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white outline-none focus:border-[#34d399]";
 
   return (
-    <main className="min-h-screen bg-black px-4 py-8 font-mono text-[#34d399]">
-      <div className="mx-auto max-w-5xl space-y-4">
+    <main className="min-h-screen px-4 py-10 text-white">
+      <div className="mx-auto max-w-5xl space-y-5">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#5f9a7e]">
-            &gt; upload orders
-          </div>
-          <h1 className="mt-1 text-2xl font-bold uppercase tracking-[0.08em] text-white">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             See your real return risk
           </h1>
-          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[#9fd9bb]">
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/70">
             Export your orders from Shopify as a CSV file and upload it here. Your file is read inside
             your own browser. It is not sent anywhere.
           </p>
         </div>
 
         {/* Step 1 */}
-        <Box title="Step 1 · Choose your file" tag="01">
-          <label className="flex cursor-pointer flex-col items-center gap-2 border border-dashed border-[#34d399]/50 bg-[#34d399]/[0.03] px-4 py-8 text-center transition-colors hover:bg-[#34d399]/[0.07]">
-            <Upload className="size-6" />
-            <span className="text-xs font-bold uppercase tracking-[0.16em]">
+        <Box title="1. Choose your file">
+          <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-white/25 bg-white/[0.02] px-4 py-10 text-center transition-colors hover:border-[#34d399]/60 hover:bg-white/[0.05]">
+            <Upload className="size-6 text-[#34d399]" />
+            <span className="text-sm font-semibold text-white">
               {fileName ? "Choose a different file" : "Tap to choose a CSV file"}
             </span>
             {fileName && (
-              <span className="flex items-center gap-1.5 text-[11px] text-[#a3e635]">
-                <FileSpreadsheet className="size-3.5" />
-                {fileName} · {rows.length} rows
+              <span className="flex items-center gap-1.5 text-sm text-[#34d399]">
+                <FileSpreadsheet className="size-4" />
+                {fileName}, {rows.length} rows
               </span>
             )}
             <input type="file" accept=".csv,text/csv" onChange={onFile} className="sr-only" />
           </label>
-          <p className="mt-3 text-[11px] leading-relaxed text-[#9fd9bb]">
-            In Shopify: open <span className="font-bold text-white">Orders</span>, press{" "}
-            <span className="font-bold text-white">Export</span>, choose your dates, pick the CSV
+          <p className="mt-4 text-sm leading-relaxed text-white/70">
+            In Shopify: open <span className="font-semibold text-white">Orders</span>, press{" "}
+            <span className="font-semibold text-white">Export</span>, choose your dates, pick the CSV
             option and press Export orders.
           </p>
         </Box>
 
         {error && (
-          <p role="alert" className="border border-[#ff3b5c]/50 bg-[#ff3b5c]/10 px-3 py-2 text-xs text-[#ff3b5c]">
+          <p
+            role="alert"
+            className="rounded-xl border border-[#ff3b5c]/40 bg-[#ff3b5c]/10 px-4 py-3 text-sm text-[#ff8097]"
+          >
             {error}
           </p>
         )}
 
         {/* Step 2 */}
         {mapping && (
-          <Box title="Step 2 · Check the columns" tag="02">
-            <p className="mb-3 text-[11px] leading-relaxed text-[#9fd9bb]">
+          <Box title="2. Check the columns">
+            <p className="mb-4 text-sm leading-relaxed text-white/70">
               We guessed which column is which. If a guess is wrong, choose the right one.
             </p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {FIELD_INFO.map((f) => (
                 <div key={f.key}>
-                  <label htmlFor={`col-${f.key}`} className="mb-1 block text-[10px] font-bold uppercase tracking-[0.16em] text-[#5f9a7e]">
+                  <label
+                    htmlFor={`col-${f.key}`}
+                    className="mb-1.5 block text-sm font-medium text-white"
+                  >
                     {f.label} {f.required && <span className="text-[#ff3b5c]">*</span>}
                   </label>
                   <select
@@ -427,17 +428,17 @@ export function OrderUpload() {
                       </option>
                     ))}
                   </select>
-                  <div className="mt-1 text-[10px] text-[#2f5a45]">{f.hint}</div>
+                  <div className="mt-1.5 text-xs text-white/50">{f.hint}</div>
                 </div>
               ))}
             </div>
 
             {statuses.length > 0 && (
-              <div className="mt-4">
-                <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#5f9a7e]">
+              <div className="mt-6">
+                <div className="mb-2 text-sm font-medium text-white">
                   Which statuses mean the order came back?
                 </div>
-                <p className="mb-2 text-[11px] leading-relaxed text-[#9fd9bb]">
+                <p className="mb-3 text-sm leading-relaxed text-white/70">
                   Shopify does not mark RTO by itself. If you add an RTO tag to orders that came
                   back, choose the Tags column above and tick RTO here.
                 </p>
@@ -451,10 +452,10 @@ export function OrderUpload() {
                         aria-pressed={on}
                         onClick={() => toggleStatus(s)}
                         className={cn(
-                          "border px-2.5 py-1 text-[11px] font-bold transition-colors",
+                          "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
                           on
-                            ? "border-[#ff3b5c] bg-[#ff3b5c]/15 text-[#ff3b5c]"
-                            : "border-[#34d399]/30 text-[#9fd9bb] hover:border-[#34d399]",
+                            ? "border-[#ff3b5c] bg-[#ff3b5c]/15 text-[#ff8097]"
+                            : "border-white/20 text-white/80 hover:border-[#34d399]",
                         )}
                       >
                         {s}
@@ -468,7 +469,7 @@ export function OrderUpload() {
             <button
               type="button"
               onClick={run}
-              className="mt-5 border border-[#34d399] bg-[#34d399] px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-[#34d399]"
+              className="mt-6 rounded-lg bg-[#34d399] px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-[#6ee7b7]"
             >
               Show my return risk
             </button>
@@ -506,7 +507,7 @@ export function OrderUpload() {
             )}
 
             {result.skipped > 0 && (
-              <p className="text-[11px] text-[#ffb000]">
+              <p className="text-sm text-[#ffb000]">
                 {result.skipped} rows were skipped because they had no 6-digit pincode. Extra product lines of the same Shopify order are skipped on purpose, so each order is counted once.
               </p>
             )}
@@ -516,7 +517,7 @@ export function OrderUpload() {
   title="Riskiest pincodes, cities and products"
   description="See which pincodes, cities and products send the most orders back, so you know where to act."
 >
-              <div className="grid gap-3 lg:grid-cols-2">
+              <div className="grid gap-4 lg:grid-cols-2">
                 <GroupTable
                   title="Riskiest pincodes (COD orders)"
                   rows={result.pins}
@@ -530,13 +531,15 @@ export function OrderUpload() {
               </div>
 
               {result.products.length > 0 && (
-                <GroupTable title="Products with the most returns" rows={result.products} empty="" />
+                <div className="mt-4">
+                  <GroupTable title="Products with the most returns" rows={result.products} empty="" />
+                </div>
               )}
             </PaywallGate>
             {/* ===== LOCK END ===== */}
 
-            <p className="flex items-start gap-2 text-[10px] uppercase leading-relaxed tracking-widest text-[#5f9a7e]">
-              <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#34d399]" />
+            <p className="flex items-start gap-2 text-sm leading-relaxed text-white/60">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#34d399]" />
               Small groups can mislead. Only pincodes, cities and products with at least 5 orders are
               shown. Red is 30% or more, yellow is 20% to 29%, green is below 20%.
             </p>
