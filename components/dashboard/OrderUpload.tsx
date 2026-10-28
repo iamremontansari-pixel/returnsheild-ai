@@ -4,6 +4,7 @@ import { useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { FileSpreadsheet, ShieldCheck, Upload } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import PaywallGate from "@/components/PaywallGate";
 
 /* ---------- Reading the CSV file (no extra packages needed) ---------- */
 
@@ -477,6 +478,7 @@ export function OrderUpload() {
         {/* Results */}
         {result && (
           <>
+            {/* FREE: summary numbers */}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Stat label="Orders read" value={String(result.total)} />
               <Stat
@@ -509,22 +511,26 @@ export function OrderUpload() {
               </p>
             )}
 
-            <div className="grid gap-3 lg:grid-cols-2">
-              <GroupTable
-                title="Riskiest pincodes (COD orders)"
-                rows={result.pins}
-                empty="Not enough orders yet. A pincode needs at least 5 COD orders to be shown."
-              />
-              <GroupTable
-                title="Riskiest cities or zones"
-                rows={result.zones}
-                empty="Not enough orders yet. At least 5 orders are needed."
-              />
-            </div>
+            {/* ===== LOCK START: riskiest pincodes, cities and products (Pro) ===== */}
+            <PaywallGate title="Riskiest pincodes, cities and products">
+              <div className="grid gap-3 lg:grid-cols-2">
+                <GroupTable
+                  title="Riskiest pincodes (COD orders)"
+                  rows={result.pins}
+                  empty="Not enough orders yet. A pincode needs at least 5 COD orders to be shown."
+                />
+                <GroupTable
+                  title="Riskiest cities or zones"
+                  rows={result.zones}
+                  empty="Not enough orders yet. At least 5 orders are needed."
+                />
+              </div>
 
-            {result.products.length > 0 && (
-              <GroupTable title="Products with the most returns" rows={result.products} empty="" />
-            )}
+              {result.products.length > 0 && (
+                <GroupTable title="Products with the most returns" rows={result.products} empty="" />
+              )}
+            </PaywallGate>
+            {/* ===== LOCK END ===== */}
 
             <p className="flex items-start gap-2 text-[10px] uppercase leading-relaxed tracking-widest text-[#5f9a7e]">
               <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[#34d399]" />
