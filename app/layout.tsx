@@ -1,6 +1,5 @@
-
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Manrope, Fraunces } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { headers } from "next/headers";
@@ -9,6 +8,12 @@ import "./globals.css";
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
+});
+
+// Used only for the big page titles (h1). Everything else stays Manrope.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-serif",
 });
 
 export const metadata: Metadata = {
@@ -30,7 +35,7 @@ export default async function RootLayout({
   const isDashboard = pathname.startsWith("/dashboard");
 
   return (
-    <html lang="en" className={manrope.variable}>
+    <html lang="en" className={`${manrope.variable} ${fraunces.variable}`}>
       <body className="antialiased">
         {!isDashboard && <Navbar />}
         <main>{children}</main>
