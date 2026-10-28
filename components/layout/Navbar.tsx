@@ -52,10 +52,13 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
+
   const linkClass = (href: string) =>
     cn(
-      "rounded-md px-3 py-2 text-[15px] font-medium transition-colors hover:text-cyan",
-      pathname === href ? "text-cyan" : "text-soft",
+      "whitespace-nowrap rounded-md px-3 py-2 text-[15px] font-medium transition-colors hover:text-cyan",
+      isActive(href) ? "text-cyan" : "text-soft",
     );
 
   async function handleLogout() {
@@ -76,20 +79,36 @@ export function Navbar() {
     setLoggingOut(false);
   }
 
-  function AccountLinks({ mobile = false }: { mobile?: boolean }) {
+  // Links for the account side of the menu. mobile = true for the small-screen menu.
+  function accountLinks(mobile: boolean) {
     if (checkingAuth) return null;
 
     if (signedIn) {
-      const plainLink = mobile
-        ? "px-3 py-3 text-[15px] font-medium text-soft"
-        : "px-3 py-2 text-[15px] font-medium text-soft hover:text-white";
+      const plain = (href: string) =>
+        cn(
+          "whitespace-nowrap font-medium transition-colors",
+          mobile
+            ? "px-3 py-3 text-[15px]"
+            : "rounded-md px-3 py-2 text-[15px] hover:text-white",
+          isActive(href) ? "text-cyan" : "text-soft",
+        );
 
       return (
         <>
-          <Link href="/dashboard" className={plainLink}>
+          <Link href="/dashboard" className={plain("/dashboard")}>
             Dashboard
           </Link>
-          <Link href="/upload" className={plainLink}>
+          <Link href="/billing" className={plain("/billing")}>
+            Billing
+          </Link>
+          <Link
+            href="/upload"
+            className={
+              mobile
+                ? "mt-2 block rounded-lg bg-brand px-4 py-3 text-center font-semibold"
+                : "whitespace-nowrap rounded-lg bg-brand px-4 py-2 text-[15px] font-semibold hover:bg-brand-dark"
+            }
+          >
             Upload orders
           </Link>
           <button
@@ -98,8 +117,8 @@ export function Navbar() {
             disabled={loggingOut}
             className={
               mobile
-                ? "flex items-center gap-2 px-3 py-3 text-left text-[15px] font-medium text-soft disabled:opacity-50"
-                : "flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-[15px] font-semibold hover:bg-brand-dark disabled:opacity-50"
+                ? "mt-1 flex items-center gap-2 px-3 py-3 text-left text-[15px] font-medium text-soft disabled:opacity-50"
+                : "flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2 text-sm text-soft transition-colors hover:text-white disabled:opacity-50"
             }
           >
             <LogOut className="size-4" />
@@ -116,7 +135,7 @@ export function Navbar() {
           className={
             mobile
               ? "px-3 py-3 text-[15px] font-medium text-soft"
-              : "px-3 py-2 text-[15px] font-medium text-soft hover:text-white"
+              : "whitespace-nowrap px-3 py-2 text-[15px] font-medium text-soft hover:text-white"
           }
         >
           Log in
@@ -126,7 +145,7 @@ export function Navbar() {
           className={
             mobile
               ? "block rounded-lg bg-brand px-4 py-3 text-center font-semibold"
-              : "rounded-lg bg-brand px-4 py-2 text-[15px] font-semibold hover:bg-brand-dark"
+              : "whitespace-nowrap rounded-lg bg-brand px-4 py-2 text-[15px] font-semibold hover:bg-brand-dark"
           }
         >
           Get started
@@ -141,31 +160,36 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-navy text-white">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="text-xl font-extrabold tracking-tight">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
+        <Link
+          href="/"
+          className="shrink-0 whitespace-nowrap text-xl font-extrabold tracking-tight"
+        >
           ReturnShield <span className="text-cyan">AI</span>
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        {/* Full menu on wide screens only */}
+        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className={linkClass(l.href)}
-              aria-current={pathname === l.href ? "page" : undefined}
+              aria-current={isActive(l.href) ? "page" : undefined}
             >
               {l.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <AccountLinks />
+        <div className="hidden items-center gap-2 lg:flex">
+          {accountLinks(false)}
         </div>
 
+        {/* Hamburger button on smaller screens */}
         <button
           type="button"
-          className="inline-flex size-11 items-center justify-center rounded-md md:hidden"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-md lg:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="mobile-menu"
@@ -178,7 +202,7 @@ export function Navbar() {
       {open && (
         <div
           id="mobile-menu"
-          className="border-t border-white/10 px-6 pb-6 md:hidden"
+          className="border-t border-white/10 px-6 pb-6 lg:hidden"
         >
           <nav aria-label="Mobile" className="flex flex-col py-3">
             {navLinks.map((l) => (
@@ -190,7 +214,7 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
-            <AccountLinks mobile />
+            {accountLinks(true)}
           </nav>
         </div>
       )}
