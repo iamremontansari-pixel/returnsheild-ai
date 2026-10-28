@@ -6,6 +6,7 @@ import { usePlan } from "@/lib/usePlan";
 
 type Props = {
   title: string;
+  description?: string;
   children: ReactNode;
   preview?: ReactNode;
 };
@@ -29,7 +30,12 @@ function SamplePreview() {
   );
 }
 
-export default function PaywallGate({ title, children, preview }: Props) {
+export default function PaywallGate({
+  title,
+  description,
+  children,
+  preview,
+}: Props) {
   const { isPro } = usePlan();
   if (isPro) return <>{children}</>;
 
@@ -55,8 +61,8 @@ export default function PaywallGate({ title, children, preview }: Props) {
           {title} · Pro
         </p>
         <p className="max-w-xs text-xs leading-5 text-[#A9B8CA]">
-          Unlock detailed risk drivers, financial exposure and recommended
-          actions.
+          {description ??
+            "Unlock detailed risk drivers, financial exposure and recommended actions."}
         </p>
         <Link
           href="/billing"
