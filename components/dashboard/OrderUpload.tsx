@@ -512,7 +512,10 @@ export function OrderUpload() {
             )}
 
             {/* ===== LOCK START: riskiest pincodes, cities and products (Pro) ===== */}
-            <PaywallGate title="Riskiest pincodes, cities and products">
+            <PaywallGate
+  title="Riskiest pincodes, cities and products"
+  description="See which pincodes, cities and products send the most orders back, so you know where to act."
+>
               <div className="grid gap-3 lg:grid-cols-2">
                 <GroupTable
                   title="Riskiest pincodes (COD orders)"
