@@ -1,6 +1,5 @@
 import { LinkButton } from "@/components/ui/LinkButton";
-import { DashboardPreview } from "@/components/dashboard/DashboardPreview";
-import DemoBanner from "@/components/DemoBanner";
+import { ProductPreview } from "@/components/landing/ProductPreview";
 export function Hero() {
   return (
     <section className="bg-linear-to-b from-navy to-navy-2 pb-20 pt-16 text-white">
@@ -18,8 +17,7 @@ export function Hero() {
           </LinkButton>
         </div>
         <div id="preview" className="mt-14 scroll-mt-24">
-          <DemoBanner />
-<DashboardPreview />
+       <ProductPreview /> 
         </div>
       </div>
     </section>
